@@ -40,10 +40,12 @@ import {
 import { mockTrips } from "../data/mockTrips";
 import { zavantazhPodorozhiAPI } from "../data/podorozhiAPI";
 import type { Korystuvach, TochkaChek, Vytrata } from "../types";
+import {
+  formatHryven,
+  procentCheklista,
+  zalyshZibrano,
+} from "../lib/rakhunky";
 import "./Podorozh.css";
-
-const formatHryven = (chyslo: number | string | undefined): string =>
-  new Intl.NumberFormat("uk-UA").format(Math.round(Number(chyslo) || 0));
 
 const formatValuta = (chyslo: number | string | undefined): string =>
   new Intl.NumberFormat("uk-UA", {
@@ -243,7 +245,7 @@ function PodorozhTilo({ id, korystuvach }: PodorozhTiloProps) {
     ? zibranoNad ?? zibranoBase
     : zibranoNad ?? 0;
   const vytracheno = vytraty.reduce((s, v) => s + Number(v.suma), 0);
-  const zalyshylos = Math.max(0, budzet - zibrano);
+  const zalyshylos = zalyshZibrano(budzet, zibrano);
 
   const vytratyYe = vytraty.length > 0;
   const pokazZibrano = vlasnyk
@@ -256,8 +258,8 @@ function PodorozhTilo({ id, korystuvach }: PodorozhTiloProps) {
   const zalyshDoPokazu = vlasnyk
     ? zalyshylos
     : zibranoNad !== undefined
-      ? Math.max(0, budzet - zibranoNad)
-      : Math.max(0, budzet - vytracheno);
+      ? zalyshZibrano(budzet, zibranoNad)
+      : zalyshZibrano(budzet, vytracheno);
   const pokazZalysh =
     vlasnyk || zibranoNad !== undefined || vytratyYe
       ? `${formatHryven(zalyshDoPokazu)} грн`
@@ -387,8 +389,7 @@ function PodorozhTilo({ id, korystuvach }: PodorozhTiloProps) {
   const kurs = fakty?.kurs || 1;
   const zroblenoCount = (chek || []).filter((it) => it.zrobleno).length;
   const vsiogoChek = (chek || []).length;
-  const procentChek =
-    vsiogoChek > 0 ? Math.round((zroblenoCount / vsiogoChek) * 100) : 0;
+  const procentChek = procentCheklista(zroblenoCount, vsiogoChek);
 
   const vkladky = [
     {

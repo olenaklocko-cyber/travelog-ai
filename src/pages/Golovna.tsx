@@ -31,24 +31,17 @@ import { zastosuvatyBudzety, zastosuvatyZibrano } from "../data/budzety";
 import { ciToVlasnyk } from "../data/dostup";
 import { mockTrips } from "../data/mockTrips";
 import type { Korystuvach, Podorozh, StatusPodorozhi } from "../types";
+import {
+  formatHryven,
+  normZapyt,
+  praporZCode,
+  procentZibrano,
+  statusDozvolenyy,
+} from "../lib/rakhunky";
 import "./Golovna.css";
-
-const formatHryven = (chyslo: number | string | undefined): string =>
-  new Intl.NumberFormat("uk-UA").format(Number(chyslo) || 0);
-
-const praporZCode = (code: string): string =>
-  String.fromCodePoint(
-    ...(code || "XX")
-      .toUpperCase()
-      .split("")
-      .map((c) => 0x1f1e6 + c.charCodeAt(0) - 65)
-  );
 
 const versalizuvaty = (s: string): string =>
   s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
-
-const normZapyt = (s: string): string =>
-  s.toLowerCase().replace(/[’ʼ`´′]/g, "'").trim();
 
 const timeoutDlyaFetch = () =>
   typeof AbortSignal !== "undefined" && AbortSignal.timeout
@@ -186,6 +179,7 @@ function Golovna({ korystuvach }: { korystuvach: Korystuvach }) {
 
       const realni = (trips || []).map((t) => ({
         ...t,
+        status: statusDozvolenyy(String(t.status)) ? t.status : "Активні збори",
         zibrano: zibrano[t.id] || 0,
         vytrachenoSuma: vytracheno[t.id] || 0,
       }));
@@ -575,13 +569,7 @@ function Golovna({ korystuvach }: { korystuvach: Korystuvach }) {
           <div className="sitka">
             {vybrani.map((p) => {
               const budzet = Number(p.budget) || 0;
-              const procent =
-                budzet > 0
-                  ? Math.min(
-                      100,
-                      Math.round(((p.zibrano ?? 0) / budzet) * 100)
-                    )
-                  : 0;
+              const procent = procentZibrano(p.zibrano, budzet);
               const mockKarta = String(p.id).startsWith("mock-");
               const chuzheZibrano = !vlasnyk && mockKarta && !p.zibranoSvoe;
               const kolir =
