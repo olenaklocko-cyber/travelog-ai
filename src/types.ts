@@ -70,3 +70,16 @@ export interface Operaciya {
   amount: number;
   type: TypOperaciyi;
 }
+
+/**
+ * Відповідь НАШОГО сервера (GET /api/porada).
+ * Контракт між застосунком (браузер) і сервером.
+ */
+export interface PoradaServera {
+  krajyna: string;
+  sezon: string;
+  porada: string;
+  pakuvannya: string[];
+  /** Промокод, обчислений із СЕКРЕТНОГО ключа — сам ключ у відповідь не потрапляє */
+  promo: string;
+}

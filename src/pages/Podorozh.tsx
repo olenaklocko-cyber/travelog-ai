@@ -39,7 +39,7 @@ import {
 } from "../data/dostup";
 import { mockTrips } from "../data/mockTrips";
 import { zavantazhPodorozhiAPI } from "../data/podorozhiAPI";
-import type { Korystuvach, TochkaChek, Vytrata } from "../types";
+import type { Korystuvach, PoradaServera, TochkaChek, Vytrata } from "../types";
 import {
   formatHryven,
   procentCheklista,
@@ -189,6 +189,40 @@ function PodorozhTilo({ id, korystuvach }: PodorozhTiloProps) {
   const [zibranoNad, setZibranoNad] = useState(() =>
     otrymatyZibrano(id, korystuvach)
   );
+
+  // 🖥 Запит до НАШОГО сервера (server/server.ts): запит → відповідь.
+  // stan: який етап зараз; «shukayemo» показуємо, якщо код країни ще не встиг
+  // отримати відповідь (див. stanServeraZaраз нижче).
+  const [stanServera, setStanServera] = useState<{
+    kod: string;
+    stan: "hocho" | "nema" | "pomylka";
+    dany?: PoradaServera;
+  } | null>(null);
+
+  useEffect(() => {
+    const kod = podorozh?.country_code;
+    if (!kod) return undefined;
+    let zhyy = true;
+    (async () => {
+      try {
+        const vidpovid = await fetch(
+          `http://localhost:3001/api/porada?krajyna=${encodeURIComponent(kod)}`
+        );
+        if (vidpovid.status === 404) {
+          if (zhyy) setStanServera({ kod, stan: "nema" });
+          return;
+        }
+        if (!vidpovid.ok) throw new Error("server pomylyvsya");
+        const dany = (await vidpovid.json()) as PoradaServera;
+        if (zhyy) setStanServera({ kod, stan: "hocho", dany });
+      } catch {
+        if (zhyy) setStanServera({ kod, stan: "pomylka" });
+      }
+    })();
+    return () => {
+      zhyy = false;
+    };
+  }, [podorozh?.country_code]);
 
   useEffect(() => {
     if (mock) return undefined;
@@ -391,6 +425,13 @@ function PodorozhTilo({ id, korystuvach }: PodorozhTiloProps) {
   const vsiogoChek = (chek || []).length;
   const procentChek = procentCheklista(zroblenoCount, vsiogoChek);
 
+  // Стан сервера «зараз»: якщо країна вже змінилася, а відповідь ще летить —
+  // показуємо завантаження (не старі дані)
+  const stanServeraZaраз =
+    stanServera?.kod === podorozh.country_code ? stanServera.stan : "shukayemo";
+  const poradaServera =
+    stanServeraZaраз === "hocho" ? stanServera?.dany : undefined;
+
   const vkladky = [
     {
       key: "finansy",
@@ -516,6 +557,49 @@ function PodorozhTilo({ id, korystuvach }: PodorozhTiloProps) {
       label: "🌍 Цікаві факти",
       children: (
         <>
+          <div className="server-kartka">
+            <h3>🖥 Порада з нашого сервера</h3>
+            {stanServeraZaраз === "shukayemo" && (
+              <p className="server-stan">
+                <Spin size="small" /> Запит до localhost:3001...
+              </p>
+            )}
+            {stanServeraZaраз === "pomylka" && (
+              <p className="server-stan server-pomylka">
+                ⚠️ Сервер не відповідає — запусти його в окремому терміналі:
+                <code> npm run server</code>
+              </p>
+            )}
+            {stanServeraZaраз === "nema" && (
+              <p className="server-stan server-pomylka">
+                🚫 Сервер відмовив: він не знає країну «{krajyna.nazva}» —
+                такі правила сервера (лише 8 країн)
+              </p>
+            )}
+            {stanServeraZaраз === "hocho" && poradaServera && (
+              <div className="server-dani">
+                <p>
+                  <b>📅 Найкращий сезон:</b> {poradaServera.sezon}
+                </p>
+                <p>
+                  <b>💡 Порада:</b> {poradaServera.porada}
+                </p>
+                <ul>
+                  {poradaServera.pakuvannya.map((r) => (
+                    <li key={r}>{r}</li>
+                  ))}
+                </ul>
+                <p className="server-promo">
+                  🎟 Ваш промокод: <b>{poradaServera.promo}</b>{" "}
+                  <span className="server-pidkazka">
+                    (обчислено на сервері з секретного ключа — сам ключ у браузер
+                    не потрапив)
+                  </span>
+                </p>
+              </div>
+            )}
+          </div>
+
           <div className="fakty-info">
             <div className="fakty-prapor">{krajyna.prapor}</div>
             <div className="fakty-dani">

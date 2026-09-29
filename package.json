@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "server": "node --env-file-if-exists=server/.env server/server.ts",
     "build": "vite build",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -21,6 +22,7 @@
     "recharts": "^3.10.1"
   },
   "devDependencies": {
+    "@types/node": "^26.6.3",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.1",

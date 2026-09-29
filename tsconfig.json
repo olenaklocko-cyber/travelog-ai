@@ -14,9 +14,10 @@
     "jsx": "react-jsx",
 
     "strict": true,
+    "types": ["node"],
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"]
+  "include": ["src", "server"]
 }
