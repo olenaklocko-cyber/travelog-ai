@@ -130,6 +130,136 @@
 }
 
 /* Факти */
+.server-kartka {
+  background: #fff;
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  border-left: 4px solid #0d9488;
+  margin-bottom: 16px;
+}
+
+.server-kartka h3 {
+  margin: 0 0 12px;
+  color: #123;
+  font-size: 17px;
+}
+
+.server-stan {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #567;
+  margin: 6px 0;
+}
+
+.server-pomylka {
+  color: #b45309;
+}
+
+.server-dani p {
+  margin: 8px 0;
+  color: #345;
+  line-height: 1.55;
+}
+
+.server-dani ul {
+  margin: 8px 0;
+  padding-left: 22px;
+  color: #345;
+  line-height: 1.7;
+}
+
+.server-promo {
+  background: #f0fdfa;
+  border: 1px dashed #0d9488;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-top: 12px;
+}
+
+.server-pidkazka {
+  display: block;
+  color: #89a;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+/* 🤖 AI-картка */
+.ai-kartka {
+  border-left-color: #7c3aed;
+  margin-top: 16px;
+}
+
+.ai-pidkazka {
+  color: #667;
+  font-size: 13.5px;
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+
+.ai-ryadok {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ai-ryadok .ant-input {
+  flex: 1;
+  min-width: 240px;
+}
+
+.ai-shvytri {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.ai-stan {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #567;
+  margin: 12px 0 0;
+}
+
+.ai-pomylka {
+  color: #b45309;
+}
+
+.ai-vidpovid {
+  background: linear-gradient(135deg, #f5f3ff, #ede9fe);
+  border: 1px solid #c4b5fd;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-top: 12px;
+}
+
+.ai-vidpovid p {
+  margin: 0;
+  color: #2c2440;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.ai-meta {
+  margin-top: 10px !important;
+  color: #7c6ba8 !important;
+  font-size: 12.5px;
+}
+
+@media (max-width: 560px) {
+  .ai-ryadok {
+    flex-direction: column;
+  }
+  .ai-ryadok .ant-input {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+/* Факти */
 .fakty-info {
   display: flex;
   align-items: center;
