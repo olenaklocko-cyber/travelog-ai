@@ -50,7 +50,7 @@ export const vyklikatyAI = async (
   prompt: string
 ): Promise<VidpovidAI> => {
   const klyuch = process.env.LLM_API_KEY;
-  const model = process.env.LLM_MODEL || "gemini-3.8-flash";
+  const model = process.env.LLM_MODEL || "gemini-3.5-flash-lite";
   if (!klyuch) {
     throw new PomylkaAI(
       503,
