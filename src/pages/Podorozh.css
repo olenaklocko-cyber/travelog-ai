@@ -1,0 +1,450 @@
+.podorozh-tulo {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+}
+
+.nazad {
+  margin-bottom: 16px;
+}
+
+.nazad a {
+  color: inherit;
+}
+
+.podorozh-zagolovok h2 {
+  color: #1a1a2e;
+  font-size: 26px;
+  margin: 6px 0 18px;
+}
+
+.zachekatka {
+  color: #777;
+  font-size: 15px;
+  text-align: center;
+  padding: 34px 10px;
+}
+
+/* Завантаження */
+.podorozh-zahruzka {
+  text-align: center;
+  padding: 70px 0;
+  color: #556;
+}
+
+/* Банер подорожі */
+.baner {
+  border-radius: 16px;
+  background-size: cover;
+  background-position: center;
+  color: #fff;
+  padding: 30px 28px;
+  margin-bottom: 18px;
+  box-shadow: 0 8px 24px rgba(4, 47, 46, 0.25);
+}
+
+.baner-prapor {
+  font-size: 36px;
+}
+
+.baner-nazva {
+  color: #fff;
+  font-size: 30px;
+  margin: 6px 0 4px;
+}
+
+.baner-meta {
+  margin: 0 0 10px;
+  font-size: 15px;
+  opacity: 0.92;
+}
+
+/* Картки статистики */
+.stat-kartky {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.stat-karta {
+  color: #fff;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+
+.stat-karta span {
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.95;
+}
+
+.stat-karta b {
+  font-size: 20px;
+}
+
+.stat-budzet {
+  background: linear-gradient(135deg, #0d9488, #14b8a6);
+}
+
+.stat-zibrano {
+  background: linear-gradient(135deg, #16a34a, #4ade80);
+}
+
+.stat-vytracheno {
+  background: linear-gradient(135deg, #dc2626, #f87171);
+}
+
+.stat-zalysh {
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+}
+
+/* Форма витрат */
+.forma-vytrat,
+.diagrama-blok,
+.koverter {
+  background: #fff;
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  margin-bottom: 16px;
+}
+
+.forma-vytrat h3,
+.diagrama-blok h3,
+.koverter h3,
+.fakty-spysok h3 {
+  margin: 0 0 12px;
+  color: #123;
+  font-size: 17px;
+}
+
+.forma-vytrat-ryadok {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* Факти */
+.fakty-info {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: linear-gradient(135deg, #0d9488, #14b8a6);
+  color: #fff;
+  border-radius: 14px;
+  padding: 20px 22px;
+  margin-bottom: 16px;
+  box-shadow: 0 6px 18px rgba(13, 148, 136, 0.3);
+}
+
+.fakty-prapor {
+  font-size: 54px;
+}
+
+.fakty-dani {
+  flex: 1;
+}
+
+.fakty-ryadok {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+  font-size: 15px;
+}
+
+.fakty-ryadok:last-child {
+  border-bottom: none;
+}
+
+.fakty-ryadok span {
+  opacity: 0.9;
+}
+
+/* Конвертер */
+.koverter-ryadok {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.koverter-pole {
+  flex: 1;
+  min-width: 210px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.koverter-pole > span {
+  font-size: 13px;
+  color: #667;
+  font-weight: 600;
+}
+
+.koverter-strelka {
+  font-size: 26px;
+  color: #0d9488;
+  font-weight: 700;
+}
+
+.koverter-vidpovid {
+  background: #f0fdfa;
+  border: 1.5px dashed #0d9488;
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 17px;
+  font-weight: 700;
+  color: #0d9488;
+  min-height: 40px;
+}
+
+.koverter-prymitka {
+  margin: 10px 0 0;
+  color: #889;
+  font-size: 13px;
+}
+
+.fakty-kartka {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: #fff;
+  border-left: 4px solid #0d9488;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.fakty-kartka p {
+  margin: 0;
+  color: #345;
+  line-height: 1.55;
+  font-size: 15px;
+}
+
+.fakty-ikonka {
+  font-size: 20px;
+}
+
+/* Чек-ліст */
+.chek-verh {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.chek-pole {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  min-width: 260px;
+}
+
+.chek-rahunok {
+  font-weight: 700;
+  color: #0d9488;
+  background: #f0fdfa;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.chek-smuga {
+  height: 10px;
+  background: #e9efee;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+
+.chek-smuga div {
+  height: 100%;
+  background: linear-gradient(90deg, #0d9488, #2dd4bf);
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.chek-spysok {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chek-elyement {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.chek-tekst {
+  font-size: 15px;
+  color: #234;
+  transition: all 0.2s;
+}
+
+.chek-tekst.zrobleno {
+  text-decoration: line-through;
+  color: #9aa;
+  opacity: 0.75;
+}
+
+.chek-vydalyty {
+  border: none;
+  background: transparent;
+  color: #c33;
+  font-size: 14px;
+  cursor: pointer;
+  opacity: 0.45;
+  padding: 4px 6px;
+}
+
+.chek-vydalyty:hover {
+  opacity: 1;
+}
+
+/* Мобільна версія */
+@media (max-width: 860px) {
+  .stat-kartky {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .fakty-info {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .fakty-ryadok {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .koverter-strelka {
+    transform: rotate(90deg);
+  }
+
+  .baner-nazva {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .stat-kartky {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .stat-karta {
+    padding: 13px 12px;
+    border-radius: 12px;
+  }
+
+  .stat-karta b {
+    font-size: 17px;
+  }
+
+  .forma-vytrat-ryadok > * {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 340px) {
+  .stat-kartky {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Кільце бюджету */
+.kiltse-blok {
+  position: relative;
+}
+
+.kiltse-tsentr {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  text-align: center;
+}
+
+.kiltse-tsilk {
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #889;
+  font-weight: 600;
+}
+
+.kiltse-budzet {
+  font-size: 26px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+.budzet-ryadok {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed #dbe5e3;
+}
+
+.budzet-pidkazka {
+  font-weight: 600;
+  color: #445;
+  font-size: 15px;
+}
+
+@media (max-width: 480px) {
+  .kiltse-budzet {
+    font-size: 21px;
+  }
+}
+
+/* Особисті фінанси приховані для сторонніх акаунтів */
+.znachennya {
+  font-variant-numeric: tabular-nums;
+}
+
+.prycher {
+  color: #9aa3b2;
+  font-weight: 700;
+  letter-spacing: 2px;
+  animation: pryhor-blik 2.6s ease-in-out infinite;
+}
+
+@keyframes pryhor-blik {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}

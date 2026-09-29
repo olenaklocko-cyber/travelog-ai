@@ -1,0 +1,54 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #e0f2fe 0%, #ccfbf1 100%);
+  min-height: 100vh;
+}
+
+.start {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  text-align: center;
+  padding: 20px;
+}
+
+.start h1 {
+  color: #1a1a2e;
+}
+
+.start p {
+  color: #888;
+}
+
+.obolonka {
+  min-height: 100vh;
+}
+
+.vmist {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 28px 20px 60px;
+}
+
+@media (max-width: 600px) {
+  .vmist {
+    padding: 20px 14px 50px;
+  }
+}
+
+/* Мобільна версія: великі цілі дотику та без автозуму iOS на полях введення */
+@media (max-width: 640px) {
+  input,
+  textarea {
+    font-size: 16px;
+  }
+}

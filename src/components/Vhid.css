@@ -1,0 +1,83 @@
+.vhid-obolonka {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.vhid-kartka {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 40px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 8px 40px rgba(13, 148, 136, 0.16);
+}
+
+.vhid-zagolovok {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.vhid-zagolovok h1 {
+  font-size: 28px;
+  color: #1a1a2e;
+  margin-bottom: 8px;
+}
+
+.vhid-zagolovok p {
+  color: #888;
+  font-size: 15px;
+}
+
+.rezhymy {
+  margin-bottom: 24px;
+}
+
+.pole {
+  margin-bottom: 16px;
+}
+
+.pole label {
+  display: block;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.pomylka {
+  margin-bottom: 16px;
+}
+
+.povedinka {
+  text-align: center;
+  padding: 20px;
+}
+
+.povedinka .ikona {
+  font-size: 48px;
+}
+
+.povedinka h2 {
+  font-size: 22px;
+  color: #1a1a2e;
+  margin: 16px 0 8px;
+}
+
+.povedinka p {
+  color: #888;
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+
+@media (max-width: 600px) {
+  .vhid-kartka {
+    padding: 26px 18px;
+  }
+
+  .vhid-zagolovok h1 {
+    font-size: 24px;
+  }
+}

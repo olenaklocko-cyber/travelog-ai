@@ -1,0 +1,48 @@
+.shapka {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #ffffff;
+  padding: 14px 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.logo {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f766e;
+}
+
+.korystuvach {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.pochta {
+  color: #555;
+  font-size: 14px;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .shapka {
+    padding: 12px 14px;
+  }
+
+  .logo {
+    font-size: 15px;
+  }
+
+  .pochta {
+    display: none;
+  }
+}
