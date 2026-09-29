@@ -176,6 +176,8 @@ createServer((zapit: IncomingMessage, vidpovid: ServerResponse) => {
           zalyshok: stan.zalyshok,
         });
       } catch (e) {
+        // ШІ не відповів — квоту повертаємо, щоб ліміт не згорів на збоях
+        istoriyaLimitiv.set(korystuvachId, istoriya);
         const pomylka =
           e instanceof PomylkaAI
             ? e
