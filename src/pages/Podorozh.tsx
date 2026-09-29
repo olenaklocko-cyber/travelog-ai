@@ -573,7 +573,7 @@ function PodorozhTilo({ id, korystuvach }: PodorozhTiloProps) {
             {stanServeraZaраз === "nema" && (
               <p className="server-stan server-pomylka">
                 🚫 Сервер відмовив: він не знає країну «{krajyna.nazva}» —
-                такі правила сервера (лише 8 країн)
+                такі правила сервера (лише 15 країн)
               </p>
             )}
             {stanServeraZaраз === "hocho" && poradaServera && (

@@ -1,5 +1,21 @@
 import { describe, it, expect } from "vitest";
 import { poradaDlya, zrobPromo } from "./logika";
+import { krajiny } from "../src/data/krajiny";
+
+describe("правила сервера = усі країни застосунку", () => {
+  it("для КОЖНОЇ країни з тревелогу є порада на сервері", () => {
+    for (const kod of Object.keys(krajiny)) {
+      expect(
+        poradaDlya(kod, "тест"),
+        `немає поради для країни ${kod} — додай її в server/logika.ts`
+      ).not.toBeNull();
+    }
+  });
+
+  it("у застосунку рівно 15 країн", () => {
+    expect(Object.keys(krajiny)).toHaveLength(15);
+  });
+});
 
 describe("poradaDlya — серверна функція порад", () => {
   it("відома країна → повна порада з промокодом", () => {
