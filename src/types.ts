@@ -16,6 +16,14 @@ export type TypOperaciyi = "Дохід" | "Витрата";
 
 /** Подорож — головна сутність застосунку */
 /** Бюджет подорожі — читання/зміна, якими володіє хук usePodorozh */
+/** Дані форми «Нова подорож» */
+export interface NovaPodorozhForm {
+  title: string;
+  country_code: string;
+  budget: number;
+  status: StatusPodorozhi;
+}
+
 export interface BudzetApi {
   budzet: number;
   zibranoBase: number;
