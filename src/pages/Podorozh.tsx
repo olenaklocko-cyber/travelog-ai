@@ -39,6 +39,7 @@ import {
 } from "../data/dostup";
 import { mockTrips } from "../data/mockTrips";
 import { zavantazhPodorozhiAPI } from "../data/podorozhiAPI";
+import { apiAdres } from "../lib/api";
 import type { Korystuvach, PoradaServera, TochkaChek, Vytrata } from "../types";
 import {
   formatHryven,
@@ -206,7 +207,7 @@ function PodorozhTilo({ id, korystuvach }: PodorozhTiloProps) {
     (async () => {
       try {
         const vidpovid = await fetch(
-          `http://localhost:3001/api/porada?krajyna=${encodeURIComponent(kod)}`
+          `${apiAdres("/api/porada")}?krajyna=${encodeURIComponent(kod)}`
         );
         if (vidpovid.status === 404) {
           if (zhyy) setStanServera({ kod, stan: "nema" });
@@ -246,7 +247,7 @@ function PodorozhTilo({ id, korystuvach }: PodorozhTiloProps) {
     try {
       const { data } = await supabase.auth.getSession();
       const tokyn = data.session?.access_token;
-      const vidpovid = await fetch("http://localhost:3001/api/ai/porada", {
+      const vidpovid = await fetch(apiAdres("/api/ai/porada"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -278,8 +279,7 @@ function PodorozhTilo({ id, korystuvach }: PodorozhTiloProps) {
         stan: "pomylka",
         tekst: "Сервер AI не відповідає — запусти: npm run server",
       });
-    }
-  };
+    }  };
 
   useEffect(() => {
     if (mock) return undefined;
@@ -618,7 +618,7 @@ function PodorozhTilo({ id, korystuvach }: PodorozhTiloProps) {
             <h3>🖥 Порада з нашого сервера</h3>
             {stanServeraZaраз === "shukayemo" && (
               <div className="server-stan">
-                <Spin size="small" /> Запит до localhost:3001...
+                <Spin size="small" /> Запит до нашого сервера...
               </div>
             )}
             {stanServeraZaраз === "pomylka" && (
@@ -717,7 +717,17 @@ function PodorozhTilo({ id, korystuvach }: PodorozhTiloProps) {
               </div>
             )}
             {stanAI.stan === "pomylka" && (
-              <p className="ai-stan ai-pomylka">{stanAI.tekst}</p>
+              <>
+                <p className="ai-stan ai-pomylka">{stanAI.tekst}</p>
+                <div className="ai-shvytri">
+                  <Button
+                    size="small"
+                    onClick={() => setStanAI({ stan: "spokijno" })}
+                  >
+                    🔁 Спробувати ще раз
+                  </Button>
+                </div>
+              </>
             )}
             {stanAI.stan === "vidpovid" && (
               <div className="ai-vidpovid">
@@ -732,6 +742,17 @@ function PodorozhTilo({ id, korystuvach }: PodorozhTiloProps) {
                     </>
                   )}
                 </p>
+                <div className="ai-shvytri">
+                  <Button
+                    size="small"
+                    onClick={() => {
+                      setStanAI({ stan: "spokijno" });
+                      setZapitAI("");
+                    }}
+                  >
+                    🔁 Запитай ще
+                  </Button>
+                </div>
               </div>
             )}
           </div>
