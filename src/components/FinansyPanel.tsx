@@ -4,7 +4,7 @@ import { Button, InputNumber, Select } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { formatHryven, zalyshZibrano } from "../lib/rakhunky";
-import type { Vytrata } from "../types";
+import type { BudzetApi, Vytrata } from "../types";
 
 const kategoriVytrat = ["Транспорт", "Житло", "Розваги", "Їжа"];
 
@@ -16,15 +16,6 @@ const kolirKategoriy: Record<string, string> = {
 };
 
 const prohorynka = "— грн";
-
-/** Стан бюджету, яким володіє сторінка (банер теж показує бюджет). */
-export interface BudzetApi {
-  budzet: number;
-  zibranoBase: number;
-  zibranoNad: number | undefined;
-  zminytyBudzet: (v: number | null) => void;
-  zminytyZibrano: (v: number | null) => void;
-}
 
 interface FinansyPanelProps {
   /** Власник бачить повні суми й кільце бюджету; гість — свої витрати. */

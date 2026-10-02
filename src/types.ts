@@ -15,6 +15,15 @@ export type StatusPodorozhi =
 export type TypOperaciyi = "Дохід" | "Витрата";
 
 /** Подорож — головна сутність застосунку */
+/** Бюджет подорожі — читання/зміна, якими володіє хук usePodorozh */
+export interface BudzetApi {
+  budzet: number;
+  zibranoBase: number;
+  zibranoNad: number | undefined;
+  zminytyBudzet: (v: number | null) => void;
+  zminytyZibrano: (v: number | null) => void;
+}
+
 export interface Podorozh {
   id: string | number;
   title: string;
