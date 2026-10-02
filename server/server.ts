@@ -6,6 +6,14 @@ import { PomylkaAI, vyklikatyAI } from "./ai.ts";
 const port = Number(process.env.SERVER_PORT) || 3001;
 
 /**
+ * Запит у форматі, який однаково лягає і на `node:http`, і на
+ * serverless-хостинг (Vercel/Netlify кладуть розібране тіло в `body`).
+ */
+export interface ZapitHTTP extends IncomingMessage {
+  body?: unknown;
+}
+
+/**
  * 🔑 СЕКРЕТНИЙ ключ промо-кодів.
  * Він живе у server/.env — файл НЕ потрапляє у git і НЕ відправляється у браузер.
  * (У застосунку ключі з префіксом VITE_ — навпаки, ВИДНІ всім.)
@@ -69,8 +77,15 @@ const VIKNO_MS = 60_000;
 const istoriyaLimitiv = new Map<string, number[]>();
 
 const otrymatyTilo = async (
-  zapit: IncomingMessage
+  zapit: ZapitHTTP
 ): Promise<Record<string, unknown> | null> => {
+  // Vercel/Netlify розбирають тіло заздалегідь і кладуть у req.body
+  if (zapit.body !== undefined && zapit.body !== null) {
+    const dany = zapit.body;
+    return typeof dany === "object"
+      ? (dany as Record<string, unknown>)
+      : null;
+  }
   const chanky: Buffer[] = [];
   for await (const chank of zapit) chanky.push(chank as Buffer);
   try {
@@ -83,8 +98,17 @@ const otrymatyTilo = async (
   }
 };
 
-createServer((zapit: IncomingMessage, vidpovid: ServerResponse) => {
-  const url = new URL(zapit.url ?? "/", "http://localhost");
+/**
+ * ЄДИНИЙ диспетчер запитів.
+ * Локально його вмикає `createServer` нижче, на Vercel — файл у `api/`.
+ * `shlyah` передаємо навмисно: serverless-хостинги інколи переписують req.url.
+ */
+export const obrotyty = (
+  zapit: ZapitHTTP,
+  vidpovid: ServerResponse,
+  shlyah?: string
+): void => {
+  const url = new URL(shlyah ?? zapit.url ?? "/", "http://localhost");
 
   if (zapit.method === "OPTIONS") {
     vidpovid.writeHead(204, CORS);
@@ -190,6 +214,17 @@ createServer((zapit: IncomingMessage, vidpovid: ServerResponse) => {
 
   // Невідомий шлях → теж наша відмова
   nadislaty(vidpovid, 404, { pomylka: "Немає такого ендпоінта" });
-}).listen(port, () => {
-  console.log(`🖥 Travelog API: http://localhost:${port}/api/zdorovya`);
-});
+};
+
+// Локальний запуск: `npm run server`
+// (на Vercel цей файл імпортується, а сервер не піднімається)
+const lokalnyyZapusk =
+  process.env.VERCEL !== "1" && process.env.VERCEL_ENV === undefined;
+
+if (lokalnyyZapusk) {
+  createServer((zapit, vidpovid) =>
+    obrotyty(zapit as ZapitHTTP, vidpovid)
+  ).listen(port, () => {
+    console.log(`🖥 Travelog API: http://localhost:${port}/api/zdorovya`);
+  });
+}
