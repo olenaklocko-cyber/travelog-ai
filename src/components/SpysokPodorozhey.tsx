@@ -3,6 +3,7 @@ import { krajiny } from "../data/krajiny";
 import { obkladynkaPodorozhi } from "../data/obkladynky";
 import { formatHryven, procentZibrano } from "../lib/rakhunky";
 import type { Podorozh, StatusPodorozhi } from "../types";
+import "./SpysokPodorozhey.css";
 
 const kolirStatusu: Record<
   StatusPodorozhi,

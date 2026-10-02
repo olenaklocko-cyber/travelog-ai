@@ -1,0 +1,5 @@
+/* Стилі: шапка сторінки та адаптив (Golovna) */
+.modalka-knopy {
+  display: flex;
+  justify-content: flex-end;
+}

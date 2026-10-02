@@ -5,6 +5,7 @@ import { krajiny } from "../data/krajiny";
 import { faktyKrayin } from "../data/faktyKrayin";
 import { apiAdres } from "../lib/api";
 import type { Podorozh, PoradaServera } from "../types";
+import "./FaktyPanel.css";
 
 const formatValuta = (chyslo: number | string | undefined): string =>
   new Intl.NumberFormat("uk-UA", {

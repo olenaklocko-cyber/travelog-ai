@@ -1,0 +1,110 @@
+/* Фінанси: статистика, витрати, кільце бюджету (компонент FinansyPanel) */
+/* Картки статистики */
+.stat-kartky {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.stat-karta {
+  color: #fff;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+
+.stat-karta span {
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.95;
+}
+
+.stat-karta b {
+  font-size: 20px;
+}
+
+.stat-budzet {
+  background: linear-gradient(135deg, #0d9488, #14b8a6);
+}
+
+.stat-zibrano {
+  background: linear-gradient(135deg, #16a34a, #4ade80);
+}
+
+.stat-vytracheno {
+  background: linear-gradient(135deg, #dc2626, #f87171);
+}
+
+.stat-zalysh {
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+}
+
+.forma-vytrat-ryadok {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* Кільце бюджету */
+.kiltse-blok {
+  position: relative;
+}
+
+.kiltse-tsentr {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  text-align: center;
+}
+
+.kiltse-tsilk {
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #889;
+  font-weight: 600;
+}
+
+.kiltse-budzet {
+  font-size: 26px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+.budzet-ryadok {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed #dbe5e3;
+}
+
+.budzet-pidkazka {
+  font-weight: 600;
+  color: #445;
+  font-size: 15px;
+}
+
+/* Особисті фінанси приховані для сторонніх акаунтів */
+.znachennya {
+  font-variant-numeric: tabular-nums;
+}
+
+.prycher {
+  color: #9aa3b2;
+  font-weight: 700;
+  letter-spacing: 2px;
+  animation: pryhor-blik 2.6s ease-in-out infinite;
+}

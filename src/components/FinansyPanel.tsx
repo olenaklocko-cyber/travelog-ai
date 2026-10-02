@@ -5,6 +5,7 @@ import { PlusOutlined } from "@ant-design/icons";
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { formatHryven, zalyshZibrano } from "../lib/rakhunky";
 import type { BudzetApi, Vytrata } from "../types";
+import "./FinansyPanel.css";
 
 const kategoriVytrat = ["Транспорт", "Житло", "Розваги", "Їжа"];
 

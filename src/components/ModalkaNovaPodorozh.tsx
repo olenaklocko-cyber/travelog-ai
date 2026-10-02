@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button, Form, Input, InputNumber, Modal, Select, Space } from "antd";
 import { krajiny, krajinyVyboru, statusy } from "../data/krajiny";
 import type { NovaPodorozhForm } from "../types";
+import "./ModalkaNovaPodorozh.css";
 
 interface ModalkaNovaPodorozhProps {
   vidkryto: boolean;

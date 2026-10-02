@@ -1,0 +1,226 @@
+/* Фінанси: статистика, витрати, кільце бюджету (компонент FinansyPanel) */
+/* Факти */
+.server-kartka {
+  background: #fff;
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  border-left: 4px solid #0d9488;
+  margin-bottom: 16px;
+}
+
+.server-kartka h3 {
+  margin: 0 0 12px;
+  color: #123;
+  font-size: 17px;
+}
+
+.server-stan {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #567;
+  margin: 6px 0;
+}
+
+.server-pomylka {
+  color: #b45309;
+}
+
+.server-dani p {
+  margin: 8px 0;
+  color: #345;
+  line-height: 1.55;
+}
+
+.server-dani ul {
+  margin: 8px 0;
+  padding-left: 22px;
+  color: #345;
+  line-height: 1.7;
+}
+
+.server-promo {
+  background: #f0fdfa;
+  border: 1px dashed #0d9488;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-top: 12px;
+}
+
+.server-pidkazka {
+  display: block;
+  color: #89a;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+/* 🤖 AI-картка */
+.ai-kartka {
+  border-left-color: #7c3aed;
+  margin-top: 16px;
+}
+
+.ai-pidkazka {
+  color: #667;
+  font-size: 13.5px;
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+
+.ai-ryadok {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ai-ryadok .ant-input {
+  flex: 1;
+  min-width: 240px;
+}
+
+.ai-shvytri {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.ai-stan {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #567;
+  margin: 12px 0 0;
+}
+
+.ai-pomylka {
+  color: #b45309;
+}
+
+.ai-vidpovid {
+  background: linear-gradient(135deg, #f5f3ff, #ede9fe);
+  border: 1px solid #c4b5fd;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-top: 12px;
+}
+
+.ai-vidpovid p {
+  margin: 0;
+  color: #2c2440;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.ai-meta {
+  margin-top: 10px !important;
+  color: #7c6ba8 !important;
+  font-size: 12.5px;
+}
+
+/* Факти */
+.fakty-info {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: linear-gradient(135deg, #0d9488, #14b8a6);
+  color: #fff;
+  border-radius: 14px;
+  padding: 20px 22px;
+  margin-bottom: 16px;
+  box-shadow: 0 6px 18px rgba(13, 148, 136, 0.3);
+}
+
+.fakty-prapor {
+  font-size: 54px;
+}
+
+.fakty-dani {
+  flex: 1;
+}
+
+.fakty-ryadok {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+  font-size: 15px;
+}
+
+.fakty-ryadok:last-child {
+  border-bottom: none;
+}
+
+.fakty-ryadok span {
+  opacity: 0.9;
+}
+
+/* Конвертер */
+.koverter-ryadok {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.koverter-pole {
+  flex: 1;
+  min-width: 210px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.koverter-pole > span {
+  font-size: 13px;
+  color: #667;
+  font-weight: 600;
+}
+
+.koverter-strelka {
+  font-size: 26px;
+  color: #0d9488;
+  font-weight: 700;
+}
+
+.koverter-vidpovid {
+  background: #f0fdfa;
+  border: 1.5px dashed #0d9488;
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 17px;
+  font-weight: 700;
+  color: #0d9488;
+  min-height: 40px;
+}
+
+.koverter-prymitka {
+  margin: 10px 0 0;
+  color: #889;
+  font-size: 13px;
+}
+
+.fakty-kartka {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: #fff;
+  border-left: 4px solid #0d9488;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.fakty-kartka p {
+  margin: 0;
+  color: #345;
+  line-height: 1.55;
+  font-size: 15px;
+}
+
+.fakty-ikonka {
+  font-size: 20px;
+}
