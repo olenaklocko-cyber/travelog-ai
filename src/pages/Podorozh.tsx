@@ -34,12 +34,11 @@ import { otrymatyBudzet, zminytyBudzet, otrymatyZibrano, zminytyZibrano } from "
 import {
   ciToVlasnyk,
   uidKorystuvacha,
-  otrymatyLokalne,
-  zberyhytyLokalne,
 } from "../data/dostup";
 import { mockTrips } from "../data/mockTrips";
 import { zavantazhPodorozhiAPI } from "../data/podorozhiAPI";
 import { apiAdres } from "../lib/api";
+import { useLokalnyyStan } from "../lib/useLokalnyyStan";
 import type { Korystuvach, PoradaServera, TochkaChek, Vytrata } from "../types";
 import {
   formatHryven,
@@ -157,27 +156,27 @@ function PodorozhTilo({ id, korystuvach }: PodorozhTiloProps) {
 
   const [podorozh, setPodorozh] = useState(mock);
   const [zavantazhennya, setZavantazhennya] = useState(!mock);
-  const [vytraty, setVytraty] = useState<Vytrata[]>(() =>
-    mock
-      ? otrymatyLokalne<Vytrata[]>(
-          klyuchVytrat,
-          [],
-          korystuvach,
-          staryyKlyuchVytrat
-        )
-      : []
-  );
-  const [chek, setChek] = useState<TochkaChek[] | null>(() =>
-    mock
-      ? yakChek(
-          otrymatyLokalne<unknown>(
-            klyuchChek,
-            zamovchennyaCheklista(mock),
-            korystuvach,
-            staryyKlyuchChek
-          )
-        )
-      : null
+
+  // Поки триває завантаження, нічого не пишемо в сховище —
+  // інакше «порожній» стер би збережені галочки/витрати користувача.
+  const [vytraty, setVytraty, perechytatyVytraty] = useLokalnyyStan<Vytrata[]>({
+    klyuch: klyuchVytrat,
+    korystuvach,
+    staryyKlyuch: staryyKlyuchVytrat,
+    zamovchennya: [],
+    chytatyZrazu: Boolean(mock),
+    zberihaty: !zavantazhennya,
+  });
+  const [chek, setChek, perechytatyChek] = useLokalnyyStan<TochkaChek[] | null>(
+    {
+      klyuch: klyuchChek,
+      korystuvach,
+      staryyKlyuch: staryyKlyuchChek,
+      zamovchennya: mock ? zamovchennyaCheklista(mock) : null,
+      chytatyZrazu: Boolean(mock),
+      zberihaty: !zavantazhennya,
+      obrobyty: yakChek,
+    }
   );
 
   const [sumaVytraty, setSumaVytraty] = useState<number | null>(null);
@@ -294,39 +293,24 @@ function PodorozhTilo({ id, korystuvach }: PodorozhTiloProps) {
         if (!zhyy) return;
         setPodorozh(data);
         setBudzetZminenyy(otrymatyBudzet(id, data?.budget, korystuvach));
-        setVytraty(
-          otrymatyLokalne<Vytrata[]>(
-            klyuchVytrat,
-            [],
-            korystuvach,
-            staryyKlyuchVytrat
-          )
-        );
-        setChek(
-          yakChek(
-            otrymatyLokalne<unknown>(
-              klyuchChek,
-              data ? zamovchennyaCheklista(data) : [],
-              korystuvach,
-              staryyKlyuchChek
-            )
-          )
-        );
+        perechytatyVytraty([]);
+        perechytatyChek(data ? zamovchennyaCheklista(data) : []);
         setZavantazhennya(false);
       });
     return () => {
       zhyy = false;
     };
-  }, [id, mock, korystuvach, klyuchVytrat, klyuchChek, staryyKlyuchVytrat, staryyKlyuchChek]);
-
-  useEffect(() => {
-    if (chek) zberyhytyLokalne(klyuchChek, chek);
-  }, [chek, klyuchChek]);
-
-  useEffect(() => {
-    if (zavantazhennya) return;
-    zberyhytyLokalne(klyuchVytrat, vytraty);
-  }, [vytraty, klyuchVytrat, zavantazhennya]);
+  }, [
+    id,
+    mock,
+    korystuvach,
+    klyuchVytrat,
+    klyuchChek,
+    staryyKlyuchVytrat,
+    staryyKlyuchChek,
+    perechytatyVytraty,
+    perechytatyChek,
+  ]);
 
   const budzet = budzetZminenyy;
   const zibranoBase = Number(podorozh?.zibrano) || 0;
