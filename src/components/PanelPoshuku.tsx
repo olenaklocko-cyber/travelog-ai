@@ -1,19 +1,8 @@
-import { useEffect, useRef, useState } from "react";
 import { Button, Input, Spin } from "antd";
 import { PlusOutlined, SendOutlined } from "@ant-design/icons";
-import { dodatyKrayinuMapy, krajiny } from "../data/krajiny";
-import { populyarniDestynaciyi } from "../data/populyarniDestynaciyi";
-import { normZapyt, praporZCode } from "../lib/rakhunky";
 import type { Podorozh } from "../types";
+import { usePoshukKrayin, versalizuvaty } from "../lib/usePoshukKrayin";
 import "./PanelPoshuku.css";
-
-const versalizuvaty = (s: string): string =>
-  s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
-
-const timeoutDlyaFetch = () =>
-  typeof AbortSignal !== "undefined" && AbortSignal.timeout
-    ? AbortSignal.timeout(10000)
-    : undefined;
 
 const vkladkyFiltra = [
   {
@@ -46,37 +35,6 @@ const vkladkyFiltra = [
   },
 ];
 
-/** Країна, знайдена через API країн світу */
-interface KrayinaZAPI {
-  code: string;
-  name: string;
-  nameUa: string;
-  nameUaNorm: string;
-  capital: string;
-  kodyValut: string[];
-}
-
-/** Кешований каталог: валюти + список країн */
-interface KatalogKrayin {
-  valuty: Record<string, { name: string }>;
-  spysok: KrayinaZAPI[];
-}
-
-/** Країна після збагачення (прапор, валюта текстом) */
-interface ZnaydenaKrayyna extends KrayinaZAPI {
-  cherezSlovnyk: boolean;
-  dzoom: string;
-  prapor: string;
-  valutaText: string;
-}
-
-/** Стан попереднього перегляду країни у пошуку */
-type StanKrayyny = {
-  zapit: string;
-  stan: "shukayemo" | "nema" | "uzhe" | "znaydeno" | "pomylka";
-  krayna?: ZnaydenaKrayyna;
-};
-
 interface PanelPoshukuProps {
   poshuk: string;
   setPoshuk: (v: string) => void;
@@ -90,7 +48,7 @@ interface PanelPoshukuProps {
 
 /**
  * 🔎 Пошук: спочатку по своїх подорожах, а якщо немає —
- * по всіх країнах світу через відкриті API (з кешем і затримкою 600 мс).
+ * по всіх країнах світу (логіка — у хуку usePoshukKrayin).
  */
 export default function PanelPoshuku({
   poshuk,
@@ -100,141 +58,12 @@ export default function PanelPoshuku({
   podorozhi,
   onDodano,
 }: PanelPoshukuProps) {
-  const [krayynaAPI, setKrayynaAPI] = useState<StanKrayyny | null>(null);
-  const krayinyUseRef = useRef<KatalogKrayin | null>(null);
-
-  useEffect(() => {
-    const zapit = poshuk.trim();
-    if (zapit.length < 2) return undefined;
-
-    const taymer = setTimeout(async () => {
-      const q = normZapyt(zapit);
-      const yLocal = podorozhi.some((p) => {
-        const nazvaKrayiny = krajiny[p.country_code]?.nazva || p.country_code;
-        return (
-          normZapyt(p.title).includes(q) ||
-          normZapyt(nazvaKrayiny).includes(q) ||
-          p.country_code.toLowerCase() === q
-        );
-      });
-      if (yLocal) return;
-
-      setKrayynaAPI({ zapit, stan: "shukayemo" });
-      try {
-        if (!krayinyUseRef.current) {
-          const [katalogKrayin, katalogValut, perelykUa] = await Promise.all([
-            fetch(
-              "https://raw.githubusercontent.com/annexare/Countries/master/dist/countries.min.json",
-              { signal: timeoutDlyaFetch() }
-            ).then((r) => {
-              if (!r.ok) throw new Error("API недоступне");
-              return r.json();
-            }),
-            fetch(
-              "https://raw.githubusercontent.com/annexare/Countries/master/dist/currencies.min.json",
-              { signal: timeoutDlyaFetch() }
-            ).then((r) => r.json()),
-            fetch(
-              "https://raw.githubusercontent.com/umpirsky/country-list/master/data/uk/country.json",
-              { signal: timeoutDlyaFetch() }
-            ).then((r) => r.json()),
-          ]);
-
-          krayinyUseRef.current = {
-            valuty: katalogValut,
-            spysok: Object.entries(
-              katalogKrayin as Record<
-                string,
-                { name?: string; capital?: string; currency?: string[] }
-              >
-            ).map(([code, k]) => ({
-              code,
-              name: k.name || "",
-              nameUa: perelykUa[code] || "",
-              nameUaNorm: normZapyt(perelykUa[code] || ""),
-              capital: k.capital || "",
-              kodyValut: k.currency || [],
-            })),
-          };
-        }
-
-        const katalog: KatalogKrayin = krayinyUseRef.current;
-        const { spysok, valuty } = katalog;
-        const kodZSlovnyka = populyarniDestynaciyi[q];
-        let znaydena = kodZSlovnyka
-          ? spysok.find((k) => k.code === kodZSlovnyka)
-          : undefined;
-        if (!znaydena) {
-          znaydena = spysok.find(
-            (k) =>
-              k.name.toLowerCase().includes(q) ||
-              k.nameUaNorm.includes(q) ||
-              k.code.toLowerCase() === q ||
-              (k.capital && k.capital.toLowerCase().includes(q))
-          );
-        }
-
-        if (!znaydena) {
-          setKrayynaAPI({ zapit, stan: "nema" });
-          return;
-        }
-
-        const krayna = {
-          ...znaydena,
-          cherezSlovnyk: Boolean(kodZSlovnyka),
-          dzoom: zapit,
-          prapor: `https://flagcdn.com/w320/${znaydena.code.toLowerCase()}.png`,
-          valutaText:
-            znaydena.kodyValut.length === 0
-              ? "—"
-              : znaydena.kodyValut
-                  .map((c) => (valuty[c] ? `${valuty[c].name} (${c})` : c))
-                  .join(", "),
-        };
-
-        const uzhe = podorozhi.some((p) => p.country_code === krayna.code);
-        setKrayynaAPI({ zapit, stan: uzhe ? "uzhe" : "znaydeno", krayna });
-      } catch {
-        setKrayynaAPI({ zapit, stan: "pomylka" });
-      }
-    }, 600);
-
-    return () => clearTimeout(taymer);
-  }, [poshuk, podorozhi]);
-
-  const apiPrev =
-    krayynaAPI && krayynaAPI.zapit === poshuk.trim() ? krayynaAPI : null;
-
-  const dobatyApiKrayinu = () => {
-    const krayna = apiPrev?.krayna;
-    if (!krayna) return;
-
-    const nazvaKrayiny = krayna.nameUa || krayna.name;
-    const nazva = krayna.cherezSlovnyk
-      ? versalizuvaty(krayna.dzoom)
-      : nazvaKrayiny;
-    dodatyKrayinuMapy(krayna.code, {
-      prapor: praporZCode(krayna.code),
-      nazva: nazvaKrayiny,
-      valiuta: krayna.kodyValut[0] || "",
-    });
-
-    onDodano(
-      {
-        id: `api-${Date.now()}`,
-        title: nazva,
-        country_code: krayna.code,
-        budget: 50000,
-        status: "Плануються",
-        zibrano: 0,
-        vytrachenoSuma: 0,
-      },
-      nazvaKrayiny
-    );
-
-    setPoshuk("");
-    setKrayynaAPI(null);
-  };
+  const { apiPrev, dobatyApiKrayinu } = usePoshukKrayin({
+    poshuk,
+    setPoshuk,
+    podorozhi,
+    onDodano,
+  });
 
   return (
     <div className="panel">
