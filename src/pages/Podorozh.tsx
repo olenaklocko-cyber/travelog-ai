@@ -1,12 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   Button,
   Checkbox,
   Empty,
   Input,
-  InputNumber,
-  Select,
   Spin,
   Tabs,
   Tag,
@@ -16,20 +14,12 @@ import {
   CloseOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
-import {
-  Cell,
-  Legend,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-} from "recharts";
 import supabase from "../supabase";
 import Shapka from "../components/Shapka";
-import AiPorada from "../components/AiPorada";
+import FaktyPanel from "../components/FaktyPanel";
+import FinansyPanel from "../components/FinansyPanel";
 import { krajiny } from "../data/krajiny";
 import { obkladynkaPodorozhi } from "../data/obkladynky";
-import { faktyKrayin } from "../data/faktyKrayin";
 import { chekListy } from "../data/chekListy";
 import { otrymatyBudzet, zminytyBudzet, otrymatyZibrano, zminytyZibrano } from "../data/budzety";
 import {
@@ -38,37 +28,16 @@ import {
 } from "../data/dostup";
 import { mockTrips } from "../data/mockTrips";
 import { zavantazhPodorozhiAPI } from "../data/podorozhiAPI";
-import { apiAdres } from "../lib/api";
 import { useLokalnyyStan } from "../lib/useLokalnyyStan";
-import type { Korystuvach, PoradaServera, TochkaChek, Vytrata } from "../types";
-import {
-  formatHryven,
-  procentCheklista,
-  zalyshZibrano,
-} from "../lib/rakhunky";
+import type { Korystuvach, TochkaChek, Vytrata } from "../types";
+import { formatHryven, procentCheklista } from "../lib/rakhunky";
 import "./Podorozh.css";
-
-const formatValuta = (chyslo: number | string | undefined): string =>
-  new Intl.NumberFormat("uk-UA", {
-    maximumFractionDigits: Number(chyslo) < 10 ? 4 : 2,
-  }).format(Number(chyslo) || 0);
-
-const kategoriVytrat = ["Транспорт", "Житло", "Розваги", "Їжа"];
 
 const kolirStatusu = {
   "Активні збори": "processing",
   "Плануються": "warning",
   "Вже відвідані": "success",
 };
-
-const kolirKategoriy: Record<string, string> = {
-  Транспорт: "#0d9488",
-  Житло: "#f59e0b",
-  Розваги: "#8b5cf6",
-  Їжа: "#ef4444",
-};
-
-const prohorynka = "— грн";
 
 const bazaCheklista = [
   "Паспорт (дійсний щонайменше 6 місяців)",
@@ -180,50 +149,13 @@ function PodorozhTilo({ id, korystuvach }: PodorozhTiloProps) {
     }
   );
 
-  const [sumaVytraty, setSumaVytraty] = useState<number | null>(null);
-  const [kategoriya, setKategoriya] = useState(kategoriVytrat[0]);
   const [novyyPunkt, setNovyyPunkt] = useState("");
-  const [grn, setGrn] = useState(1000);
   const [budzetZminenyy, setBudzetZminenyy] = useState(() =>
     otrymatyBudzet(id, mock?.budget, korystuvach)
   );
   const [zibranoNad, setZibranoNad] = useState(() =>
     otrymatyZibrano(id, korystuvach)
   );
-
-  // 🖥 Запит до НАШОГО сервера (server/server.ts): запит → відповідь.
-  // stan: який етап зараз; «shukayemo» показуємо, якщо код країни ще не встиг
-  // отримати відповідь (див. stanServeraZaраз нижче).
-  const [stanServera, setStanServera] = useState<{
-    kod: string;
-    stan: "hocho" | "nema" | "pomylka";
-    dany?: PoradaServera;
-  } | null>(null);
-
-  useEffect(() => {
-    const kod = podorozh?.country_code;
-    if (!kod) return undefined;
-    let zhyy = true;
-    (async () => {
-      try {
-        const vidpovid = await fetch(
-          `${apiAdres("/api/porada")}?krajyna=${encodeURIComponent(kod)}`
-        );
-        if (vidpovid.status === 404) {
-          if (zhyy) setStanServera({ kod, stan: "nema" });
-          return;
-        }
-        if (!vidpovid.ok) throw new Error("server pomylyvsya");
-        const dany = (await vidpovid.json()) as PoradaServera;
-        if (zhyy) setStanServera({ kod, stan: "hocho", dany });
-      } catch {
-        if (zhyy) setStanServera({ kod, stan: "pomylka" });
-      }
-    })();
-    return () => {
-      zhyy = false;
-    };
-  }, [podorozh?.country_code]);
 
 
   useEffect(() => {
@@ -260,83 +192,6 @@ function PodorozhTilo({ id, korystuvach }: PodorozhTiloProps) {
 
   const budzet = budzetZminenyy;
   const zibranoBase = Number(podorozh?.zibrano) || 0;
-  // Власноруч вказана сума зібраного персональна: власник бачить свою
-  // (або базову з витрат), чужий — лише власноруч введену, інакше прочерк.
-  const zibrano = vlasnyk
-    ? zibranoNad ?? zibranoBase
-    : zibranoNad ?? 0;
-  const vytracheno = vytraty.reduce((s, v) => s + Number(v.suma), 0);
-  const zalyshylos = zalyshZibrano(budzet, zibrano);
-
-  const vytratyYe = vytraty.length > 0;
-  const pokazZibrano = vlasnyk
-    ? `${formatHryven(zibrano)} грн`
-    : zibranoNad !== undefined
-      ? `${formatHryven(zibranoNad)} грн`
-      : prohorynka;
-  const pokazVytracheno =
-    vlasnyk || vytratyYe ? `${formatHryven(vytracheno)} грн` : prohorynka;
-  const zalyshDoPokazu = vlasnyk
-    ? zalyshylos
-    : zibranoNad !== undefined
-      ? zalyshZibrano(budzet, zibranoNad)
-      : zalyshZibrano(budzet, vytracheno);
-  const pokazZalysh =
-    vlasnyk || zibranoNad !== undefined || vytratyYe
-      ? `${formatHryven(zalyshDoPokazu)} грн`
-      : prohorynka;
-  const clCysla = (znachennya: string): string =>
-    znachennya === prohorynka ? "znachennya prycher" : "znachennya";
-
-  const finHrafik = useMemo(
-    () => [
-      { name: "Вже зібрано", value: Math.max(0, zibrano), kolir: "#16a34a" },
-      { name: "Залишилося зібрати", value: zalyshylos, kolir: "#f59e0b" },
-      { name: "Вже витрачено", value: vytracheno, kolir: "#ef4444" },
-    ],
-    [zibrano, zalyshylos, vytracheno]
-  );
-
-  const kiltseGosta = useMemo(() => {
-    const hrupa: Record<string, number> = {};
-    vytraty.forEach((v) => {
-      hrupa[v.kategoriya] = (hrupa[v.kategoriya] || 0) + Number(v.suma);
-    });
-    const segmenty = Object.entries(hrupa).map(([name, value]) => ({
-      name,
-      value,
-      kolir: kolirKategoriy[name] || "#0d9488",
-    }));
-    const razom = segmenty.reduce((s, d) => s + d.value, 0);
-    const zalyshok = Math.max(0, budzet - razom);
-    if (zalyshok > 0) {
-      segmenty.push({
-        name: "Не заповнено",
-        value: zalyshok,
-        kolir: "#e2e8f0",
-      });
-    }
-    if (segmenty.length === 0) {
-      segmenty.push({
-        name: "Очікує на заповнення",
-        value: 1,
-        kolir: "#e2e8f0",
-      });
-    }
-    return segmenty;
-  }, [vytraty, budzet]);
-
-  const kiltseData = vlasnyk ? finHrafik : kiltseGosta;
-
-  const dodatyVytratu = () => {
-    if (!Number(sumaVytraty) || Number(sumaVytraty) <= 0) return;
-    setVytraty((star) => [
-      ...star,
-      { id: Date.now(), suma: Number(sumaVytraty), kategoriya },
-    ]);
-    setSumaVytraty(null);
-  };
-
   const zminytyBudzetLokalno = (v: number | null) => {
     const znachennya = Number(v) || 0;
     setBudzetZminenyy(znachennya);
@@ -406,18 +261,9 @@ function PodorozhTilo({ id, korystuvach }: PodorozhTiloProps) {
     nazva: podorozh.country_code,
     valiuta: "",
   };
-  const fakty = faktyKrayin[podorozh.country_code] || null;
-  const kurs = fakty?.kurs || 1;
   const zroblenoCount = (chek || []).filter((it) => it.zrobleno).length;
   const vsiogoChek = (chek || []).length;
   const procentChek = procentCheklista(zroblenoCount, vsiogoChek);
-
-  // Стан сервера «зараз»: якщо країна вже змінилася, а відповідь ще летить —
-  // показуємо завантаження (не старі дані)
-  const stanServeraZaраз =
-    stanServera?.kod === podorozh.country_code ? stanServera.stan : "shukayemo";
-  const poradaServera =
-    stanServeraZaраз === "hocho" ? stanServera?.dany : undefined;
 
   const vkladky = [
     {
@@ -425,117 +271,18 @@ function PodorozhTilo({ id, korystuvach }: PodorozhTiloProps) {
       label: "💰 Фінанси",
       children: (
         <>
-          <div className="stat-kartky">
-            <div className="stat-karta stat-budzet">
-              <span>💳 Загальний бюджет</span>
-              <b>{formatHryven(budzet)} грн</b>
-            </div>
-            <div className="stat-karta stat-zibrano">
-              <span>💰 Зібрано</span>
-              <b className={clCysla(pokazZibrano)}>{pokazZibrano}</b>
-            </div>
-            <div className="stat-karta stat-vytracheno">
-              <span>🛒 Витрачено</span>
-              <b className={clCysla(pokazVytracheno)}>{pokazVytracheno}</b>
-            </div>
-            <div className="stat-karta stat-zalysh">
-              <span>🎯 Залишилось зібрати</span>
-              <b className={clCysla(pokazZalysh)}>{pokazZalysh}</b>
-            </div>
-          </div>
-
-          <div className="forma-vytrat">
-            <h3>Додати витрату</h3>
-            <div className="forma-vytrat-ryadok">
-              <InputNumber
-                min={1}
-                placeholder="Сума"
-                addonBefore="грн"
-                value={sumaVytraty}
-                onChange={setSumaVytraty}
-                style={{ width: 180 }}
-              />
-              <Select
-                value={kategoriya}
-                onChange={setKategoriya}
-                style={{ width: 180 }}
-                options={kategoriVytrat.map((k) => ({ value: k, label: k }))}
-              />
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={dodatyVytratu}
-              >
-                Додати витрату
-              </Button>
-            </div>
-          </div>
-
-          <div className="diagrama-blok">
-            <h3>
-              {vlasnyk
-                ? "📊 Кільце бюджету: ціль подорожі"
-                : "📊 Розподіл витрат по категоріях"}
-            </h3>
-            <div className="kiltse-blok">
-              <ResponsiveContainer width="100%" height={320}>
-                <PieChart>
-                  <Pie
-                    data={kiltseData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius="42%"
-                    outerRadius="68%"
-                    paddingAngle={3}
-                    stroke="none"
-                  >
-                    {kiltseData.map((d) => (
-                      <Cell key={d.name} fill={d.kolir} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(v) =>
-                      `${formatHryven(Array.isArray(v) ? v[0] : v)} грн`
-                    }
-                  />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="kiltse-tsentr">
-                <span className="kiltse-tsilk">Ціль</span>
-                <b className="kiltse-budzet">{formatHryven(budzet)} грн</b>
-              </div>
-            </div>
-            <div className="budzet-ryadok">
-              <span className="budzet-pidkazka">
-                🎯 Змінити бюджет (ціль подорожі):
-              </span>
-              <InputNumber
-                min={0}
-                max={100000000}
-                value={budzet}
-                onChange={zminytyBudzetLokalno}
-                addonAfter="грн"
-                style={{ width: 210 }}
-              />
-            </div>
-            <div className="budzet-ryadok">
-              <span className="budzet-pidkazka">
-                💰 Вже зібрано (ваша особиста сума):
-              </span>
-              <InputNumber
-                min={0}
-                max={100000000}
-                value={zibranoNad ?? (vlasnyk ? zibranoBase : null)}
-                onChange={zminytyZibranoLokalno}
-                addonAfter="грн"
-                style={{ width: 210 }}
-                placeholder="не вказано"
-              />
-            </div>
-          </div>
+          <FinansyPanel
+            vlasnyk={vlasnyk}
+            vytraty={vytraty}
+            zminytyVytraty={setVytraty}
+            budzetApi={{
+              budzet,
+              zibranoBase,
+              zibranoNad,
+              zminytyBudzet: zminytyBudzetLokalno,
+              zminytyZibrano: zminytyZibranoLokalno,
+            }}
+          />
         </>
       ),
     },
@@ -544,109 +291,7 @@ function PodorozhTilo({ id, korystuvach }: PodorozhTiloProps) {
       label: "🌍 Цікаві факти",
       children: (
         <>
-          <div className="server-kartka">
-            <h3>🖥 Порада з нашого сервера</h3>
-            {stanServeraZaраз === "shukayemo" && (
-              <div className="server-stan">
-                <Spin size="small" /> Запит до нашого сервера...
-              </div>
-            )}
-            {stanServeraZaраз === "pomylka" && (
-              <p className="server-stan server-pomylka">
-                ⚠️ Сервер не відповідає — запусти його в окремому терміналі:
-                <code> npm run server</code>
-              </p>
-            )}
-            {stanServeraZaраз === "nema" && (
-              <p className="server-stan server-pomylka">
-                🚫 Сервер відмовив: він не знає країну «{krajyna.nazva}» —
-                такі правила сервера (лише 15 країн)
-              </p>
-            )}
-            {stanServeraZaраз === "hocho" && poradaServera && (
-              <div className="server-dani">
-                <p>
-                  <b>📅 Найкращий сезон:</b> {poradaServera.sezon}
-                </p>
-                <p>
-                  <b>💡 Порада:</b> {poradaServera.porada}
-                </p>
-                <ul>
-                  {poradaServera.pakuvannya.map((r) => (
-                    <li key={r}>{r}</li>
-                  ))}
-                </ul>
-                <p className="server-promo">
-                  🎟 Ваш промокод: <b>{poradaServera.promo}</b>{" "}
-                  <span className="server-pidkazka">
-                    (обчислено на сервері з секретного ключа — сам ключ у браузер
-                    не потрапив)
-                  </span>
-                </p>
-              </div>
-            )}
-          </div>
-
-          <div className="fakty-info">
-            <div className="fakty-prapor">{krajyna.prapor}</div>
-            <div className="fakty-dani">
-              <div className="fakty-ryadok">
-                <span>🗣 Офіційна мова</span>
-                <b>{fakty?.mova || "Дані уточнюються"}</b>
-              </div>
-              <div className="fakty-ryadok">
-                <span>💵 Валюта</span>
-                <b>{fakty?.valiutaPovna || krajyna.valiuta}</b>
-              </div>
-              <div className="fakty-ryadok">
-                <span>📈 Курс до гривні</span>
-                <b>1 {krajyna.valiuta} ≈ {formatValuta(kurs)} грн</b>
-              </div>
-            </div>
-          </div>
-
-          <AiPorada podorozh={podorozh} />
-
-                    <div className="koverter">
-            <h3>🔁 Конвертер валют: гривні → валюта подорожі</h3>
-            <div className="koverter-ryadok">
-              <div className="koverter-pole">
-                <span>Сума у гривнях</span>
-                <InputNumber
-                  min={0}
-                  value={grn}
-                  onChange={(v) => setGrn(v ?? 0)}
-                  addonBefore="₴"
-                  style={{ width: "100%" }}
-                />
-              </div>
-              <span className="koverter-strelka">→</span>
-              <div className="koverter-pole">
-                <span>
-                  {krajyna.nazva} ({krajyna.valiuta})
-                </span>
-                <div className="koverter-vidpovid">
-                  ≈ {formatValuta(grn / kurs)} {krajyna.valiuta}
-                </div>
-              </div>
-            </div>
-            <p className="koverter-prymitka">
-              Тестовий фіксований курс: 1 {krajyna.valiuta} ≈{" "}
-              {formatValuta(kurs)} грн
-            </p>
-          </div>
-
-          <div className="fakty-spysok">
-            <h3>💡 Чи знаєте ви, що...</h3>
-            {(fakty?.fakty || [
-              "Ця країна ще чекає на свою добірку цікавих фактів — додамо найближчим часом!",
-            ]).map((tekst) => (
-              <div className="fakty-kartka" key={tekst}>
-                <span className="fakty-ikonka">🤯</span>
-                <p>{tekst}</p>
-              </div>
-            ))}
-          </div>
+          <FaktyPanel podorozh={podorozh} />
         </>
       ),
     },
