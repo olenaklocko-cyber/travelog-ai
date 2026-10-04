@@ -24,8 +24,9 @@ interface FaktyPanelProps {
 export default function FaktyPanel({ podorozh }: FaktyPanelProps) {
   const [stanServera, setStanServera] = useState<{
     kod: string;
-    stan: "hocho" | "nema" | "pomylka";
+    stan: "hocho" | "nema" | "vidmova" | "pomylka";
     dany?: PoradaServera;
+    povidomlennya?: string;
   } | null>(null);
   const [grn, setGrn] = useState(1000);
 
@@ -42,7 +43,20 @@ export default function FaktyPanel({ podorozh }: FaktyPanelProps) {
           if (zhyy) setStanServera({ kod, stan: "nema" });
           return;
         }
-        if (!vidpovid.ok) throw new Error("server pomylyvsya");
+        if (!vidpovid.ok) {
+          // Сервер живий, але відмовив (4xx) — це НЕ «запусти локальний сервер»
+          const vidmova = (await vidpovid
+            .json()
+            .catch(() => null)) as { pomylka?: string } | null;
+          if (zhyy)
+            setStanServera({
+              kod,
+              stan: "vidmova",
+              povidomlennya:
+                vidmova?.pomylka ?? `Сервер відповів ${vidpovid.status}`,
+            });
+          return;
+        }
         const dany = (await vidpovid.json()) as PoradaServera;
         if (zhyy) setStanServera({ kod, stan: "hocho", dany });
       } catch {
@@ -78,9 +92,15 @@ export default function FaktyPanel({ podorozh }: FaktyPanelProps) {
             <Spin size="small" /> Запит до нашого сервера...
           </div>
         )}
+        {stanServeraZaраз === "vidmova" && (
+          <p className="server-stan server-pomylka">
+            🚫 Сервер відмовив: {stanServera?.povidomlennya}
+          </p>
+        )}
         {stanServeraZaраз === "pomylka" && (
           <p className="server-stan server-pomylka">
-            ⚠️ Сервер не відповідає — запусти його в окремому терміналі:
+            ⚠️ Не вдалося звʼязатися з сервером (мережа або він вимкнений) —
+            спробуйте трохи пізніше. Локально його можна підняти командою
             <code> npm run server</code>
           </p>
         )}
