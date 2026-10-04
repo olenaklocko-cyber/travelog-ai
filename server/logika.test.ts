@@ -126,10 +126,11 @@ describe("pobuduvatyPrompt — промпт, який сервер збирає 
 });
 
 describe("obrotyty — диспетчер (регресія: параметри на Vercel)", () => {
+  /** Мінімальний мок ServerResponse: ловимо код і тіло відповіді. */
   const zapyt = (
     shlyah: string,
     zapitUrl?: string
-  ): { stav: { kod?: number; tilo?: string }; res: ZapitHTTP extends never ? never : any } => {
+  ): { kod?: number; tilo?: string } => {
     const stav: { kod?: number; tilo?: string } = {};
     const res = {
       writeHead: (kod: number) => {
@@ -142,36 +143,40 @@ describe("obrotyty — диспетчер (регресія: параметри 
       },
     };
     obrotyty(
-      { url: zapitUrl ?? shlyah, method: "GET", headers: {} } as unknown as ZapitHTTP,
+      {
+        url: zapitUrl ?? shlyah,
+        method: "GET",
+        headers: {},
+      } as unknown as ZapitHTTP,
       res as never,
       shlyah
     );
-    return { stav, res };
+    return stav;
   };
 
   it("query-рядок не губиться, коли хостинг передає шлях окремо (був баг)", () => {
-    const { stav } = zapyt("/api/porada", "/api/porada?krajyna=AE");
-    expect(stav.kod).toBe(200);
-    expect(stav.tilo).toContain("листопад");
+    const { kod, tilo } = zapyt("/api/porada", "/api/porada?krajyna=AE");
+    expect(kod).toBe(200);
+    expect(tilo).toContain("листопад");
   });
 
   it("без параметра — так само 400, як і раніше", () => {
-    const { stav } = zapyt("/api/porada", "/api/porada");
-    expect(stav.kod).toBe(400);
-    expect(stav.tilo).toContain("krajyna");
+    const { kod, tilo } = zapyt("/api/porada", "/api/porada");
+    expect(kod).toBe(400);
+    expect(tilo).toContain("krajyna");
   });
 
   it("параметр читається і коли shlyah не передано (локальний запуск)", () => {
-    const { stav } = zapyt("/api/porada?krajyna=JP");
-    expect(stav.kod).toBe(200);
-    expect(stav.tilo).toContain('"JP"');
+    const { kod, tilo } = zapyt("/api/porada?krajyna=JP");
+    expect(kod).toBe(200);
+    expect(tilo).toContain('"JP"');
   });
 
   it("перевірка здоров'я працює з shlyah", () => {
-    expect(zapyt("/api/zdorovya").stav.kod).toBe(200);
+    expect(zapyt("/api/zdorovya").kod).toBe(200);
   });
 
   it("невідомий ендпоінт → 404", () => {
-    expect(zapyt("/api/nescheme").stav.kod).toBe(404);
+    expect(zapyt("/api/nescheme").kod).toBe(404);
   });
 });
