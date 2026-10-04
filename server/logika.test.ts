@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { perevirkaLimitu, pobuduvatyPrompt, poradaDlya, zrobPromo } from "./logika";
+import { obrotyty, type ZapitHTTP } from "./server";
 import { krajiny } from "../src/data/krajiny";
 
 describe("правила сервера = усі країни застосунку", () => {
@@ -121,5 +122,61 @@ describe("pobuduvatyPrompt — промпт, який сервер збирає 
   it("порожній запит → теж валідний промпт (без помилок)", () => {
     const prompt = pobuduvatyPrompt("", " ");
     expect(prompt.length).toBeGreaterThan(0);
+  });
+});
+
+describe("obrotyty — диспетчер (регресія: параметри на Vercel)", () => {
+  /** Мінімальний мок ServerResponse: ловимо код і тіло відповіді. */
+  const zapyt = (
+    shlyah: string,
+    zapitUrl?: string
+  ): { kod?: number; tilo?: string } => {
+    const stav: { kod?: number; tilo?: string } = {};
+    const res = {
+      writeHead: (kod: number) => {
+        stav.kod = kod;
+        return res;
+      },
+      setHeader: () => undefined,
+      end: (tilo?: string) => {
+        stav.tilo = tilo;
+      },
+    };
+    obrotyty(
+      {
+        url: zapitUrl ?? shlyah,
+        method: "GET",
+        headers: {},
+      } as unknown as ZapitHTTP,
+      res as never,
+      shlyah
+    );
+    return stav;
+  };
+
+  it("query-рядок не губиться, коли хостинг передає шлях окремо (був баг)", () => {
+    const { kod, tilo } = zapyt("/api/porada", "/api/porada?krajyna=AE");
+    expect(kod).toBe(200);
+    expect(tilo).toContain("листопад");
+  });
+
+  it("без параметра — так само 400, як і раніше", () => {
+    const { kod, tilo } = zapyt("/api/porada", "/api/porada");
+    expect(kod).toBe(400);
+    expect(tilo).toContain("krajyna");
+  });
+
+  it("параметр читається і коли shlyah не передано (локальний запуск)", () => {
+    const { kod, tilo } = zapyt("/api/porada?krajyna=JP");
+    expect(kod).toBe(200);
+    expect(tilo).toContain('"JP"');
+  });
+
+  it("перевірка здоров'я працює з shlyah", () => {
+    expect(zapyt("/api/zdorovya").kod).toBe(200);
+  });
+
+  it("невідомий ендпоінт → 404", () => {
+    expect(zapyt("/api/nescheme").kod).toBe(404);
   });
 });

@@ -108,7 +108,13 @@ export const obrotyty = (
   vidpovid: ServerResponse,
   shlyah?: string
 ): void => {
-  const url = new URL(shlyah ?? zapit.url ?? "/", "http://localhost");
+  // Маршрут і параметри — з РІЗНИХ джерел:
+  //  - pathname беремо з `shlyah` (serverless-хостинги інколи переписують req.url);
+  //  - query-рядок — ЛИШЕ з req.url, бо `shlyah` передають без «?...»,
+  //    і раніше параметр krajyna мовчки відкидався → 400 на Vercel.
+  const url = new URL(zapit.url ?? shlyah ?? "/", "http://localhost");
+  const shlyahZapytu = new URL(shlyah ?? url.pathname, "http://localhost")
+    .pathname;
 
   if (zapit.method === "OPTIONS") {
     vidpovid.writeHead(204, CORS);
@@ -117,7 +123,7 @@ export const obrotyty = (
   }
 
   // Ендпоінт 1: перевірка, що сервер живий
-  if (zapit.method === "GET" && url.pathname === "/api/zdorovya") {
+  if (zapit.method === "GET" && shlyahZapytu === "/api/zdorovya") {
     nadislaty(vidpovid, 200, {
       ok: true,
       server: "Travelog API",
@@ -127,7 +133,7 @@ export const obrotyty = (
   }
 
   // Ендпоінт 2: порада для країни — за ПРАВИЛАМИ СЕРВЕРА
-  if (zapit.method === "GET" && url.pathname === "/api/porada") {
+  if (zapit.method === "GET" && shlyahZapytu === "/api/porada") {
     const kod = url.searchParams.get("krajyna") ?? "";
     if (!kod) {
       nadislaty(vidpovid, 400, { pomylka: "Додайте параметр: ?krajyna=XX" });
@@ -145,7 +151,7 @@ export const obrotyty = (
   }
 
   // Ендпоінт 3: 🤖 AI-порада — лише для вошедших + ліміт 5/хв
-  if (zapit.method === "POST" && url.pathname === "/api/ai/porada") {
+  if (zapit.method === "POST" && shlyahZapytu === "/api/ai/porada") {
     void (async () => {
       // Бар'єр 1: хто це?
       const korystuvachId = await khtoKorystuvach(zapit);
@@ -219,7 +225,9 @@ export const obrotyty = (
 // Локальний запуск: `npm run server`
 // (на Vercel цей файл імпортується, а сервер не піднімається)
 const lokalnyyZapusk =
-  process.env.VERCEL !== "1" && process.env.VERCEL_ENV === undefined;
+  process.env.VERCEL !== "1" &&
+  process.env.VERCEL_ENV === undefined &&
+  process.env.VITEST === undefined;
 
 if (lokalnyyZapusk) {
   createServer((zapit, vidpovid) =>
