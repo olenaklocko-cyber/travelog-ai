@@ -1,6 +1,8 @@
 import { Button, Empty, Popconfirm, Spin, Tag } from "antd";
+import { DownloadOutlined } from "@ant-design/icons";
 import { krajiny } from "../data/krajiny";
 import { obkladynkaPodorozhi } from "../data/obkladynky";
+import { nazvaCSV, podorozhiDoCSV, skachatyCSV } from "../lib/eksportCSV";
 import { formatHryven, procentZibrano } from "../lib/rakhunky";
 import type { Podorozh, StatusPodorozhi } from "../types";
 import "./SpysokPodorozhey.css";
@@ -43,9 +45,24 @@ export default function SpysokPodorozhey({
   vydaty,
   vidkryty,
 }: SpysokPodorozheyProps) {
+  const eksportuvaty = () => {
+    skachatyCSV(nazvaCSV(), podorozhiDoCSV(vybrani, krajiny));
+  };
+
   return (
     <>
-      <p className="lichilnyk">Подорожей знайдено: {vybrani.length}</p>
+      <div className="lichilnyk-ryadok">
+        <p className="lichilnyk">Подорожей знайдено: {vybrani.length}</p>
+        {vybrani.length > 0 && (
+          <Button
+            icon={<DownloadOutlined />}
+            className="knopa-eksport"
+            onClick={eksportuvaty}
+          >
+            Експорт CSV
+          </Button>
+        )}
+      </div>
 
       {zavantazhennya ? (
         <div className="centr">
