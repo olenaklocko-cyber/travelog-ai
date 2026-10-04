@@ -7,8 +7,13 @@
  *
  * Ключ моделі сюди НЕ потрапляє — він лише на сервері (server/.env).
  */
+const LOCALLY = "http://localhost:3001";
+
 export const API_BASE: string = (
-  import.meta.env.VITE_API_BASE ?? "http://localhost:3001"
+  // Прод (Vercel/GitHub Pages): запити йдуть на ТОЙ САМИЙ домен —
+  // у браузера користувача немає нашого сервера на localhost.
+  import.meta.env.VITE_API_BASE ??
+  (import.meta.env.PROD ? "" : LOCALLY)
 ).replace(/\/$/, "");
 
 export const apiAdres = (shlyah: string): string =>
