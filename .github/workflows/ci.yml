@@ -83,7 +83,7 @@ jobs:
         run: npx vercel pull --yes --environment=production
 
       - name: Збірка для продакшену
-        run: npx vercel build
+        run: npx vercel build --prod
 
       - name: Публікація
         run: npx vercel deploy --prebuilt --prod
