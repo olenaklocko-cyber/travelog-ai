@@ -84,3 +84,12 @@ test("невірний пароль показує українську підк
   await expect(page.getByText("Невірний email або пароль")).toBeVisible();
   await expect(page.getByText("Invalid login credentials")).toHaveCount(0);
 });
+
+test("підказка: користувач одразу бачить, куди натискати", async ({ page }) => {
+  await mokSupabase(page);
+  await page.goto("/");
+  // три кроки з'являються ДО форми (за відгуком «не розумію куди нажати»)
+  await expect(page.getByText(/Введіть email і пароль/)).toBeVisible();
+  await expect(page.getByText(/Усередині — ваші подорожі/)).toBeVisible();
+  await expect(page.getByText(/напишіть відгук/)).toBeVisible();
+});

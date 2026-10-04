@@ -9,6 +9,7 @@ import {
 } from "@ant-design/icons";
 import supabase from "../supabase";
 import FormaVidhuku from "./FormaVidhuku";
+import { perekladPomylky } from "../lib/perekladPomylky";
 import "./Vhid.css";
 
 function Vhid() {
@@ -74,6 +75,19 @@ function Vhid() {
           </div>
         ) : (
           <>
+            <ol className="vhid-kroky">
+              <li>
+                <b>1.</b> Введіть email і пароль — це ваш особистий кабінет.
+              </li>
+              <li>
+                <b>2.</b> Усередині — ваші подорожі, бюджет і збори.
+              </li>
+              <li>
+                <b>3.</b> Не хочете реєструватись? Тоді просто напишіть відгук
+                нижче — анонімно.
+              </li>
+            </ol>
+
             <Segmented
               block
               value={rezhym}
@@ -142,20 +156,6 @@ function Vhid() {
       </div>
     </div>
   );
-}
-
-function perekladPomylky(message: string): string {
-  const pomylky: Record<string, string> = {
-    "Invalid login credentials": "Невірний email або пароль",
-    "User already registered": "Користувач вже зареєстрований",
-    "Password should be at least 6 characters":
-      "Пароль має бути мінімум 6 символів",
-    "Email not confirmed": "Email не підтверджено. Перевірте пошту",
-    "Unable to validate email address: invalid format":
-      "Невірний формат email",
-    "Signup requires a valid password": "Введіть пароль",
-  };
-  return pomylky[message] || message;
 }
 
 export default Vhid;

@@ -85,3 +85,23 @@
 .vhid-vidhuk {
   margin-top: 18px;
 }
+
+.vhid-kroky {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 18px;
+  background: #f0fdfa;
+  border: 1px solid rgba(13, 148, 136, 0.2);
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.vhid-kroky li {
+  font-size: 13.5px;
+  color: #44403c;
+  line-height: 1.55;
+}
+
+.vhid-kroky li b {
+  color: #0d9488;
+}
