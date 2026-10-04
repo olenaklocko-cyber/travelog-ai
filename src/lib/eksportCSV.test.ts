@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ZAGOLOVKY, nazvaCSV, podorozhiDoCSV } from "./eksportCSV";
+import { ZAGOLOVKY, nazvaCSV, podorozhiDoCSV, vmistCSV } from "./eksportCSV";
 import type { Krayina, Podorozh } from "../types";
 
 const krajiny: Record<string, Krayina> = {
@@ -38,9 +38,14 @@ describe("eksportCSV", () => {
   });
 
   it("бере назву країни з довідника, а невідомий код лишає кодом", () => {
-    const csv = podorozhiDoCSV([podorozhi[1], { ...podorozhi[1], country_code: "XX" }], krajiny);
-    expect(csv).toContain('"Карпати";"Україна"');
-    expect(csv).toContain('"Карпати";"XX"');
+    const ryadky = podorozhiDoCSV(
+      [podorozhi[1], { ...podorozhi[1], country_code: "XX" }],
+      krajiny
+    )
+      .trimEnd()
+      .split("\r\n");
+    expect(ryadky[1]).toBe('"Карпати";"Україна";"Плануються";"12000";"0";"0"');
+    expect(ryadky[2]).toBe('"Карпати";"XX";"Плануються";"12000";"0";"0"');
   });
 
   it("екранує подвійні лапки", () => {
@@ -76,9 +81,36 @@ describe("eksportCSV", () => {
     expect(podorozhi).toEqual(kopiyka);
   });
 
-  it("формує назву файлу з дати", () => {
+  it("формує назву файлу з локальної дати, а не з UTC", () => {
+    // 2 жовтня 2026, 00:30 за Києвом — у UTC це ще 1 жовтня
+    const den = new Date(2026, 9, 2, 0, 30);
+    expect(nazvaCSV(den)).toBe("podorozhi-2026-10-02.csv");
     expect(nazvaCSV(new Date("2026-10-02T10:00:00Z"))).toBe(
       "podorozhi-2026-10-02.csv"
+    );
+  });
+
+  it("безпечний від формул: «=1+1» не виконається в Excel", () => {
+    const csv = podorozhiDoCSV(
+      [{ ...podorozhi[0], title: "=1+1" }, { ...podorozhi[0], title: "@SUM(A1)" }],
+      krajiny
+    );
+    expect(csv).toContain('"\'=1+1"');
+    expect(csv).toContain('"\'@SUM(A1)"');
+  });
+
+  it("число з пробілом не стає нулем", () => {
+    const csv = podorozhiDoCSV(
+      [{ ...podorozhi[0], budget: "120 000" as unknown as number, zibrano: "45\u00a0000" as unknown as number }],
+      krajiny
+    );
+    expect(csv).toContain(';"120000";"45000";');
+  });
+
+  it("вміст файлу починається з UTF-8 BOM", () => {
+    expect(vmistCSV([], krajiny).startsWith("\uFEFF")).toBe(true);
+    expect(vmistCSV([], krajiny).endsWith(ZAGOLOVKY.join("").slice(0, 1))).toBe(
+      false
     );
   });
 });
