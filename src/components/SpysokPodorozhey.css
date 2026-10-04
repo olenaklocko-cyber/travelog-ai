@@ -196,3 +196,17 @@
   background: #fff;
   transform: scale(1.12);
 }
+
+/* Рядок із лічильником і кнопкою експорту */
+.lichilnyk-ryadok {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.knopa-eksport {
+  border-radius: 10px;
+  font-weight: 600;
+}
