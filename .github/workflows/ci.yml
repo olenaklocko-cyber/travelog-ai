@@ -1,0 +1,89 @@
+name: CI/CD
+
+# Кожен push і кожен Pull Request → тести.
+# Деплой — ТІЛЬКИ після зелених тестів і ТІЛЬКИ з main.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Тести (typecheck, lint, unit, build, E2E)
+    runs-on: ubuntu-latest
+    env:
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_KEY: ${{ secrets.VITE_SUPABASE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Залежності
+        run: npm ci
+
+      - name: Перевірка типів
+        run: npm run typecheck
+
+      - name: Лінтер
+        run: npm run lint
+
+      - name: Юніт-тести
+        run: npm run test
+
+      - name: Збірка (потрібна для E2E)
+        run: npm run build
+
+      - name: Браузер Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E-тести (робот клацає як користувач)
+        run: npm run test:e2e
+
+      - name: Звіт Playwright (якщо щось червоне)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  deploy:
+    name: Деплой на Vercel
+    needs: tests
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Залежності
+        run: npm ci
+
+      - name: Налаштування Vercel (секрети проєкту)
+        run: npx vercel pull --yes --environment=production
+
+      - name: Збірка для продакшену
+        run: npx vercel build
+
+      - name: Публікація
+        run: npx vercel deploy --prebuilt --prod
