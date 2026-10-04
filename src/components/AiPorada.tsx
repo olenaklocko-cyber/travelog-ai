@@ -67,7 +67,9 @@ export default function AiPorada({ podorozh }: AiPoradaProps) {
     } catch {
       setStanAI({
         stan: "pomylka",
-        tekst: "Сервер AI не відповідає — запусти: npm run server",
+        tekst: import.meta.env.DEV
+          ? "Сервер AI не відповідає — запусти: npm run server"
+          : "Не вдалося звʼязатися з сервером ШІ — спробуйте трохи пізніше",
       });
     }
   };

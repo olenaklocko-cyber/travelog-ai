@@ -100,8 +100,14 @@ export default function FaktyPanel({ podorozh }: FaktyPanelProps) {
         {stanServeraZaраз === "pomylka" && (
           <p className="server-stan server-pomylka">
             ⚠️ Не вдалося звʼязатися з сервером (мережа або він вимкнений) —
-            спробуйте трохи пізніше. Локально його можна підняти командою
-            <code> npm run server</code>
+            спробуйте трохи пізніше.
+            {import.meta.env.DEV && (
+              <>
+                {" "}
+                Локально його можна підняти командою
+                <code> npm run server</code>
+              </>
+            )}
           </p>
         )}
         {stanServeraZaраз === "nema" && (
