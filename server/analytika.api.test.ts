@@ -39,7 +39,11 @@ const viklikaty = async (zapit: {
 };
 
 /** Мок Supabase: ловимо запити сервера до бази, у мережу не йдемо. */
-const supabaseVyklyky: { url: string; tilo?: unknown }[] = [];
+const supabaseVyklyky: {
+  url: string;
+  tilo?: unknown;
+  zagolovky?: Record<string, string>;
+}[] = [];
 const supabaseOtvity = (
   roztashuvannya: { url: string; vidpovid: unknown; kod?: number }[]
 ) => {
@@ -49,7 +53,11 @@ const supabaseOtvity = (
       const url = String(input);
       const tilo =
         typeof init?.body === "string" ? JSON.parse(init.body) : undefined;
-      supabaseVyklyky.push({ url, tilo });
+      supabaseVyklyky.push({
+        url,
+        tilo,
+        zagolovky: (init?.headers ?? {}) as Record<string, string>,
+      });
       for (const r of roztashuvannya) {
         if (url.includes(r.url)) {
           return new Response(JSON.stringify(r.vidpovid), {
@@ -108,6 +116,17 @@ describe("POST /api/analytics/visit — лічильник відвідуван�
     expect(tilo.sesiya).toBe("ses-visit-1");
     expect(tilo.shlyah).toBe("/trip/3");
     expect(tilo.den).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it("регресія: анонімна вставка БЕЗ return=representation (RLS не має SELECT-прав)", async () => {
+    supabaseOtvity([{ url: "/rest/v1/vizyty", vidpovid: null, kod: 201 }]);
+    const { kod } = await viklikaty({
+      shlyah: "/api/analytics/visit",
+      method: "POST",
+      tilo: { sesiya: "ses-prefer-1", shlyah: "/" },
+    });
+    expect(kod).toBe(200);
+    expect(supabaseVyklyky[0].zagolovky?.Prefer).toBeUndefined();
   });
 
   it("база впала → 502, а не тихий успіх", async () => {
@@ -197,6 +216,11 @@ describe("GET /api/analytics/stats — графік для власника", ()
       { den: "2026-10-05", unikalni: 1, zapysiv: 1 },
     ]);
     expect(dany.denOstanniy).toBe("2026-10-05");
+    // власник має токен → Prefer дозволений (рядки повертаються)
+    const zapytDoBazy = supabaseVyklyky.find((v) =>
+      v.url.includes("/rest/v1/vizyty")
+    );
+    expect(zapytDoBazy?.zagolovky?.Prefer).toBe("return=representation");
   });
 });
 

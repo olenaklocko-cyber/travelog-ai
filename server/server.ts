@@ -120,7 +120,9 @@ const supabaseZapros = async (zapyt: {
           apikey: supabaseKlyuch,
           Authorization: `Bearer ${zapyt.tokyn ?? supabaseKlyuch}`,
           "Content-Type": "application/json",
-          Prefer: "return=representation",
+          // return=representation вимагає SELECT-прав: анонім їх не має
+          // (дані власника приховані RLS) → тоді PostgREST відмовляє.
+          ...(zapyt.tokyn ? { Prefer: "return=representation" } : {}),
         },
         body: zapyt.tilo === undefined ? undefined : JSON.stringify(zapyt.tilo),
         signal: AbortSignal.timeout(5000),
