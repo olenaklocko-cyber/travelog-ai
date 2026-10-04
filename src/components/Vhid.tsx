@@ -8,6 +8,7 @@ import {
   UserAddOutlined,
 } from "@ant-design/icons";
 import supabase from "../supabase";
+import FormaVidhuku from "./FormaVidhuku";
 import "./Vhid.css";
 
 function Vhid() {
@@ -135,6 +136,9 @@ function Vhid() {
             </form>
           </>
         )}
+        <div className="vhid-vidhuk">
+          <FormaVidhuku />
+        </div>
       </div>
     </div>
   );

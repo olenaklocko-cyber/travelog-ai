@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, message } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import { BarChartOutlined, PlusOutlined } from "@ant-design/icons";
 import supabase from "../supabase";
 import Shapka from "../components/Shapka";
 import PanelPoshuku from "../components/PanelPoshuku";
@@ -192,14 +192,23 @@ function Golovna({ korystuvach }: { korystuvach: Korystuvach }) {
               <b className="c-planuyutsya">{lychilnyky.planuyutsya}</b> мрій!
             </p>
           </div>
-          <Button
-            type="primary"
-            size="large"
-            icon={<PlusOutlined />}
-            onClick={() => setModalka(true)}
-          >
-            Додати подорож
-          </Button>
+          <div className="zaholovok-diyi">
+            <Button
+              size="large"
+              icon={<BarChartOutlined />}
+              href="#/analityka"
+            >
+              Графік відвідувань
+            </Button>
+            <Button
+              type="primary"
+              size="large"
+              icon={<PlusOutlined />}
+              onClick={() => setModalka(true)}
+            >
+              Додати подорож
+            </Button>
+          </div>
         </div>
 
         <PanelPoshuku

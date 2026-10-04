@@ -9,5 +9,6 @@ export default defineConfig({
   test: {
     // e2e/ — це Playwright, його ганяє `npm run test:e2e`
     include: ["src/**/*.test.{ts,tsx}", "server/**/*.test.ts"],
+    setupFiles: ["server/test-setup.ts"],
   },
 })

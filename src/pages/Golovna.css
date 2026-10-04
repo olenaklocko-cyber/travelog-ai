@@ -177,3 +177,20 @@
     font-size: 22px;
   }
 }
+
+.zaholovok-diyi {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 600px) {
+  .zaholovok-diyi {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .zaholovok-diyi button {
+    width: 100%;
+  }
+}

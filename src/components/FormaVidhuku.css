@@ -1,0 +1,44 @@
+.forma-vidhuku {
+  background: #fff;
+  border: 1px solid #e7e5e4;
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 5%);
+}
+
+.forma-vidhuku-zagolovok {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #1c1917;
+}
+
+.forma-vidhuku-dni {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.forma-vidhuku-lychylnyk {
+  color: #78716c;
+  font-size: 13px;
+}
+
+.forma-vidhuku-pomylka {
+  color: #dc2626;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.forma-vidhuku-mala {
+  color: #a8a29e;
+  font-size: 12px;
+  margin: 10px 0 0;
+}
+
+.forma-vidhuku.poshta {
+  box-shadow: none;
+  background: #fafaf9;
+}

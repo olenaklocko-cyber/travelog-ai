@@ -1,7 +1,12 @@
 import { createServer } from "node:http";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { perevirkaLimitu, pobuduvatyPrompt, poradaDlya } from "./logika.ts";
-import { PomylkaAI, vyklikatyAI } from "./ai.ts";
+import { PomylkaAI, vyklikatyAI } from "./ai.ts";import {
+  chystyyVidhuk,
+  pidsumky,
+  validuvatyShlyah,
+  validuvatySesiya,
+} from "./analytika.ts";
 
 const port = Number(process.env.SERVER_PORT) || 3001;
 
@@ -46,11 +51,22 @@ const nadislaty = (
  * Перевіряємо Supabase-токен через їхній ендпоінт /auth/v1/user.
  * Якщо токена немає або він брехливий → null (401).
  */
-const khtoKorystuvach = async (
+const tokynIzZapytu = (zapit: IncomingMessage): string | null =>
+  /^Bearer\s+(.+)$/i.exec(zapit.headers.authorization ?? "")?.[1] ?? null;
+
+interface KorystuvachSupabase {
+  id: string;
+  email: string;
+}
+
+/**
+ * Той самий запит, але повертає ще й email — він потрібен, щоб сказати
+ * «це не сторінка власника» зрозумілою мовою, а не віддати порожній список.
+ */
+const khtoKorystuvachZEmailom = async (
   zapit: IncomingMessage
-): Promise<string | null> => {
-  const zagolovok = zapit.headers.authorization ?? "";
-  const tokyn = /^Bearer\s+(.+)$/i.exec(zagolovok)?.[1];
+): Promise<KorystuvachSupabase | null> => {
+  const tokyn = tokynIzZapytu(zapit);
   if (!tokyn || !supabaseAdresa) return null;
   try {
     const vidpovid = await fetch(`${supabaseAdresa}/auth/v1/user`, {
@@ -61,12 +77,64 @@ const khtoKorystuvach = async (
       signal: AbortSignal.timeout(5000),
     });
     if (!vidpovid.ok) return null;
-    const dany = (await vidpovid.json()) as { id?: string };
-    return dany.id ?? null;
+    const dany = (await vidpovid.json()) as { id?: string; email?: string };
+    return dany.id ? { id: dany.id, email: dany.email ?? "" } : null;
   } catch {
     return null;
   }
 };
+
+const khtoKorystuvach = async (
+  zapit: IncomingMessage
+): Promise<string | null> => (await khtoKorystuvachZEmailom(zapit))?.id ?? null;
+
+/**
+ * Email власника застосунку. Якщо змінної нема — перевірка вимкнена
+ * (дані все одно захищені RLS у самій базі).
+ */
+const emailVlasnyka = (process.env.VITE_VLASYNYK_EMAIL ?? "")
+  .trim()
+  .toLowerCase();
+
+const ciVlasnyk = (email: string): boolean =>
+  !emailVlasnyka || email.toLowerCase() === emailVlasnyka;
+
+/**
+ * Один виклик Supabase REST (PostgREST).
+ * `tokyn` — токен користувача: тоді база застосовує ПОЛІТИКИ до цього юзера
+ * (анонімний токен = роль anon = лише те, що дозволено анонімно).
+ */
+const supabaseZapros = async (zapyt: {
+  shlyah: string;
+  method: string;
+  tilo?: unknown;
+  tokyn?: string;
+}): Promise<{ ok: boolean; status: number; dany: unknown }> => {
+  if (!supabaseAdresa) return { ok: false, status: 503, dany: null };
+  try {
+    const vidpovid = await fetch(
+      `${supabaseAdresa}/rest/v1/${zapyt.shlyah}`,
+      {
+        method: zapyt.method,
+        headers: {
+          apikey: supabaseKlyuch,
+          Authorization: `Bearer ${zapyt.tokyn ?? supabaseKlyuch}`,
+          "Content-Type": "application/json",
+          Prefer: "return=representation",
+        },
+        body: zapyt.tilo === undefined ? undefined : JSON.stringify(zapyt.tilo),
+        signal: AbortSignal.timeout(5000),
+      }
+    );
+    const dany = await vidpovid.json().catch(() => null);
+    return { ok: vidpovid.ok, status: vidpovid.status, dany };
+  } catch {
+    return { ok: false, status: 504, dany: null };
+  }
+};
+
+/** День у форматі YYYY-MM-DD за UTC — щоб графік не стрибав від поясів. */
+const siohoDen = (): string => new Date().toISOString().slice(0, 10);
 
 /**
  * 🛡 Бар'єр 2 — ліміт запитів на користувача (5 на хвилину).
@@ -75,6 +143,13 @@ const khtoKorystuvach = async (
 const MAX_ZAPYTIV = 5;
 const VIKNO_MS = 60_000;
 const istoriyaLimitiv = new Map<string, number[]>();
+
+/** Анонімні дії теж лімітуємо — інакше бот налапає тисячі рядків. */
+const MAX_VIZYTIV = 5; // відвідувань на сесію за хвилину
+const MAX_VIDHUKIV = 3; // відгуків на сесію за 10 хвилин
+const VIKNO_VIDHUKIV_MS = 10 * 60_000;
+const istoriyaVizytiv = new Map<string, number[]>();
+const istoriyaVidhukiv = new Map<string, number[]>();
 
 const otrymatyTilo = async (
   zapit: ZapitHTTP
@@ -214,6 +289,204 @@ export const obrotyty = (
             : new PomylkaAI(502, "Невідома помилка ШІ");
         nadislaty(vidpovid, pomylka.kod, { pomylka: pomylka.message });
       }
+    })();
+    return;
+  }
+
+  // ─── 📊 АНАЛІТИКА ─────────────────────────────────────────────
+
+  // Ендпоінт 4: зафіксувати відвідування (анонімно, без логіну)
+  if (zapit.method === "POST" && shlyahZapytu === "/api/analytics/visit") {
+    void (async () => {
+      const tilo = await otrymatyTilo(zapit);
+      const sesiya = tilo?.sesiya;
+      const shlyahStorinky = tilo?.shlyah ?? "/";
+
+      if (!validuvatySesiya(sesiya)) {
+        nadislaty(vidpovid, 400, {
+          pomylka: "Надішліть анонімну сесію: { sesiya: \"...\" }",
+        });
+        return;
+      }
+      if (!validuvatyShlyah(shlyahStorinky)) {
+        nadislaty(vidpovid, 400, {
+          pomylka: "shlyah має бути локальним шляхом: \"/\" або \"/trip/3\"",
+        });
+        return;
+      }
+
+      // Ліміт: одна сесія не може тикати безкінечно
+      const teper = Date.now();
+      const stan = perevirkaLimitu(
+        istoriyaVizytiv.get(sesiya) ?? [],
+        teper,
+        MAX_VIZYTIV,
+        VIKNO_MS
+      );
+      if (!stan.dozvoleno) {
+        nadislaty(vidpovid, 200, { ok: true, opusneno: true });
+        return;
+      }
+      istoriyaVizytiv.set(sesiya, [
+        ...(istoriyaVizytiv.get(sesiya) ?? []).filter(
+          (t) => teper - t < VIKNO_MS
+        ),
+        teper,
+      ]);
+
+      const zapis = await supabaseZapros({
+        shlyah: "vizyty",
+        method: "POST",
+        tilo: { den: siohoDen(), sesiya, shlyah: shlyahStorinky },
+      });
+      if (!zapis.ok) {
+        nadislaty(vidpovid, 502, { pomylka: "База даних не відповіла" });
+        return;
+      }
+      nadislaty(vidpovid, 200, { ok: true });
+    })();
+    return;
+  }
+
+  // Ендпоінт 5: статистика для графіка — ЛИШЕ власнику
+  if (zapit.method === "GET" && shlyahZapytu === "/api/analytics/stats") {
+    void (async () => {
+      const korystuvach = await khtoKorystuvachZEmailom(zapit);
+      if (!korystuvach) {
+        nadislaty(vidpovid, 401, {
+          pomylka: "Спочатку увійдіть у свій акаунт",
+        });
+        return;
+      }
+      if (!ciVlasnyk(korystuvach.email)) {
+        nadislaty(vidpovid, 403, { pomylka: "Статистика належить власнику" });
+        return;
+      }
+
+      const dano = await supabaseZapros({
+        shlyah: "vizyty?select=den,sesiya&order=den.asc&limit=5000",
+        method: "GET",
+        tokyn: tokynIzZapytu(zapit) ?? undefined,
+      });
+      if (!dano.ok) {
+        nadislaty(vidpovid, 502, { pomylka: "База даних не відповіла" });
+        return;
+      }
+      const zapysy = Array.isArray(dano.dany) ? dano.dany : [];
+      nadislaty(vidpovid, 200, pidsumky(zapysy));
+    })();
+    return;
+  }
+
+  // ─── 💬 ЗВОРОТНИЙ ЗВ'ЯЗОК ──────────────────────────────────────
+
+  // Ендпоінт 6: залишити анонімний відгук (без логіну)
+  if (zapit.method === "POST" && shlyahZapytu === "/api/feedback") {
+    void (async () => {
+      const tilo = await otrymatyTilo(zapit);
+      const teks = chystyyVidhuk(tilo?.teks);
+      const sesiya = typeof tilo?.sesiya === "string" ? tilo.sesiya : "";
+
+      if (!teks) {
+        nadislaty(vidpovid, 400, {
+          pomylka: "Відгук має бути від 3 до 1000 символів",
+        });
+        return;
+      }
+
+      const teper = Date.now();
+      const stan = perevirkaLimitu(
+        istoriyaVidhukiv.get(sesiya) ?? [],
+        teper,
+        MAX_VIDHUKIV,
+        VIKNO_VIDHUKIV_MS
+      );
+      if (!stan.dozvoleno) {
+        nadislaty(vidpovid, 429, {
+          pomylka: `Забагато відгуків. Спробуйте за ${stan.chekatySec} с.`,
+        });
+        return;
+      }
+      istoriyaVidhukiv.set(sesiya, [
+        ...(istoriyaVidhukiv.get(sesiya) ?? []).filter(
+          (t) => teper - t < VIKNO_VIDHUKIV_MS
+        ),
+        teper,
+      ]);
+
+      const zapis = await supabaseZapros({
+        shlyah: "vidhuky",
+        method: "POST",
+        tilo: { teks },
+      });
+      if (!zapis.ok) {
+        nadislaty(vidpovid, 502, { pomylka: "База даних не відповіла" });
+        return;
+      }
+      nadislaty(vidpovid, 201, { ok: true });
+    })();
+    return;
+  }
+
+  // Ендпоінт 7: список відгуків — ЛИШЕ власнику
+  if (zapit.method === "GET" && shlyahZapytu === "/api/feedback") {
+    void (async () => {
+      const korystuvach = await khtoKorystuvachZEmailom(zapit);
+      if (!korystuvach) {
+        nadislaty(vidpovid, 401, {
+          pomylka: "Спочатку увійдіть у свій акаунт",
+        });
+        return;
+      }
+      if (!ciVlasnyk(korystuvach.email)) {
+        nadislaty(vidpovid, 403, { pomylka: "Відгуки бачить лише власник" });
+        return;
+      }
+
+      const dano = await supabaseZapros({
+        shlyah: "vidhuky?select=id,teks,chas,opraciovano&order=chas.desc&limit=200",
+        method: "GET",
+        tokyn: tokynIzZapytu(zapit) ?? undefined,
+      });
+      if (!dano.ok) {
+        nadislaty(vidpovid, 502, { pomylka: "База даних не відповіла" });
+        return;
+      }
+      nadislaty(vidpovid, 200, {
+        vidhuky: Array.isArray(dano.dany) ? dano.dany : [],
+      });
+    })();
+    return;
+  }
+
+  // Ендпоінт 8: позначити відгук опрацьованим — ЛИШЕ власнику
+  if (zapit.method === "PATCH" && shlyahZapytu === "/api/feedback") {
+    void (async () => {
+      const korystuvach = await khtoKorystuvachZEmailom(zapit);
+      if (!korystuvach || !ciVlasnyk(korystuvach.email)) {
+        nadislaty(vidpovid, 403, { pomylka: "Це може зробити лише власник" });
+        return;
+      }
+
+      const tilo = await otrymatyTilo(zapit);
+      const id = Number(tilo?.id);
+      const opraciovano = tilo?.opraciovano === true;
+      if (!Number.isInteger(id) || id <= 0) {
+        nadislaty(vidpovid, 400, { pomylka: "Надішліть { id, opraciovano }" });
+        return;
+      }
+
+      const zapis = await supabaseZapros({
+        shlyah: `vidhuky?id=eq.${id}`,
+        method: "PATCH",
+        tilo: { opraciovano },
+        tokyn: tokynIzZapytu(zapit) ?? undefined,
+      });
+      if (!zapis.ok) {
+        nadislaty(vidpovid, 502, { pomylka: "База даних не відповіла" });
+        return;
+      }
+      nadislaty(vidpovid, 200, { ok: true });
     })();
     return;
   }

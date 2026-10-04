@@ -100,3 +100,36 @@ export interface PoradaServera {
   /** Промокод, обчислений із СЕКРЕТНОГО ключа — сам ключ у відповідь не потрапляє */
   promo: string;
 }
+
+/**
+ * 📊 Один запис відвідування (таблиця vizyty).
+ * `sesiya` — анонімний id браузера, `den` — день у форматі YYYY-MM-DD.
+ */
+export interface ZapysVizytu {
+  den: string;
+  sesiya: string;
+  shlyah: string;
+}
+
+/** Добовий стовпчик графіка: унікальні люди та загальна кількість заходів. */
+export interface DenStat {
+  den: string;
+  unikalni: number;
+  zapysiv: number;
+}
+
+/** Підсумки статистики (GET /api/analytics/stats). */
+export interface PidsumkyAnalityky {
+  dni: DenStat[];
+  vsogoUnikalnyh: number;
+  vsogoZapysiv: number;
+  denOstanniy: string | null;
+}
+
+/** Анонімний відгук (таблиця vidhuky). */
+export interface Vidhuk {
+  id: number;
+  teks: string;
+  chas: string;
+  opraciovano: boolean;
+}
