@@ -1,5 +1,6 @@
 import type { Krayina, StatusPodorozhi } from "../types";
 import supabase from "../supabase";
+import { keshKrayin } from "../lib/kesh";
 
 /** Локальний словник — резерв, якщо база недоступна */
 export const krajiny: Record<string, Krayina> = {
@@ -21,23 +22,24 @@ export const krajiny: Record<string, Krayina> = {
 };
 
 /**
- * Завантажує країни з таблиці krajiny і дозаповнює локальний словник.
+ * Завантажує країни з таблиці krajiny (з кешем 24 год).
  * Якщо база недоступна — працюємо з локальним словником.
  */
 export const zavantazhytyKrajinyZBazy = async (): Promise<void> => {
   try {
-    const { data } = await supabase
-      .from("krajiny")
-      .select("code, nazva, emoji");
-    if (data) {
-      for (const k of data) {
-        if (!krajiny[k.code]) {
-          krajiny[k.code] = {
-            prapor: k.emoji,
-            nazva: k.nazva,
-            valiuta: "", // валюта не в базі — за потреби додати
-          };
-        }
+    const data = await keshKrayin.aboObchyslyty("krajiny", async () => {
+      const { data: rows } = await supabase
+        .from("krajiny")
+        .select("code, nazva, emoji");
+      return rows ?? [];
+    });
+    for (const k of data) {
+      if (!krajiny[k.code]) {
+        krajiny[k.code] = {
+          prapor: k.emoji,
+          nazva: k.nazva,
+          valiuta: "",
+        };
       }
     }
   } catch {

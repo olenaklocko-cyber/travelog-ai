@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import supabase from "../supabase";
+import { Kesh } from "./kesh";
 import { otrymatyBudzet, otrymatyZibrano, zminytyBudzet, zminytyZibrano } from "../data/budzety";
 import { ciToVlasnyk, uidKorystuvacha } from "../data/dostup";
 import { mockTrips } from "../data/mockTrips";
@@ -14,6 +15,9 @@ import type {
   TochkaChek,
   Vytrata,
 } from "../types";
+
+// Тиждень 2: кеш окремих подорожей (TTL 2 хв)
+const keshOkrPodorozh = new Kesh<Podorozh | null>(2 * 60 * 1000);
 
 /**
  * Приводимо збережений чек-ліст до правильного вигляду.
@@ -104,16 +108,20 @@ export function usePodorozh(
   });
 
   // Подорож, якої немає в mock-даних, лежить у Supabase.
-  // Використовуємо вигляд trips_z_vidatamy — zibrano/vytracheno рахує база.
+  // Тиждень 2: кеш 2 хв — повторний перехід на сторінку без запиту.
   useEffect(() => {
     if (mock) return undefined;
     let zhyy = true;
-    supabase
-      .from("trips_z_vidatamy")
-      .select("*")
-      .eq("id", id)
-      .maybeSingle()
-      .then(({ data }) => {
+    keshOkrPodorozh
+      .aboObchyslyty(id, async () => {
+        const { data } = await supabase
+          .from("trips_z_vidatamy")
+          .select("*")
+          .eq("id", id)
+          .maybeSingle();
+        return (data as Podorozh | null) ?? null;
+      })
+      .then((data) => {
         if (!zhyy) return;
         setPodorozh(data);
         setBudzetZminenyy(otrymatyBudzet(id, data?.budget, korystuvach));

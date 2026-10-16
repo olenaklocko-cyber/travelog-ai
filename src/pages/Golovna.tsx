@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button, message } from "antd";
 import { BarChartOutlined, PlusOutlined } from "@ant-design/icons";
 import supabase from "../supabase";
+import { keshPodorozhey } from "../lib/kesh";
 import Shapka from "../components/Shapka";
 import PanelPoshuku from "../components/PanelPoshuku";
 import SpysokPodorozhey from "../components/SpysokPodorozhey";
@@ -40,18 +41,26 @@ function Golovna({ korystuvach }: { korystuvach: Korystuvach }) {
 
   const zavantazhyty = useCallback(async () => {
     try {
-      // Використовуємо вигляд trips_z_vidatamy: zibrano/vytracheno рахує база
-      const { data: trips } = await supabase
-        .from("trips_z_vidatamy")
-        .select("*")
-        .order("id", { ascending: false });
+      // Тиждень 2: кеш 2 хв — 2-й захід на сторінку без запиту до бази
+      const trips = (await keshPodorozhey.aboObchyslyty("trips", async () => {
+        const { data } = await supabase
+          .from("trips_z_vidatamy")
+          .select("*")
+          .order("id", { ascending: false })
+          .limit(50);
+        return data ?? [];
+      })) as Record<string, unknown>[];
 
-      const realni = (trips || []).map((t) => ({
+      const realni = trips.map((t) => ({
         ...t,
+        id: t.id,
+        title: String(t.title ?? ""),
+        country_code: String(t.country_code ?? ""),
+        budget: Number(t.budget) || 0,
         status: statusDozvolenyy(String(t.status)) ? t.status : "Активні збори",
         zibrano: Number(t.zibrano) || 0,
         vytrachenoSuma: Number(t.vytracheno) || 0,
-      }));
+      })) as Podorozh[];
 
       // Кожен акаунт має свій список прихованих карток:
       // чиє видалення діє лише під цим акаунтом, на інших — не впливає.
@@ -122,6 +131,7 @@ function Golovna({ korystuvach }: { korystuvach: Korystuvach }) {
       }
     }
     setPodorozhi((star) => star.filter((t) => String(t.id) !== id));
+    keshPodorozhey.ochystytyKlyuch("trips");
     messageApi.success(`Подорож «${p.title}» видалено ✌️`);
   };
 
@@ -138,7 +148,17 @@ function Golovna({ korystuvach }: { korystuvach: Korystuvach }) {
       return false;
     }
     messageApi.success("Подорож додано!");
-    zavantazhyty();
+    // Тиждень 2: оптимістичне оновлення + інвалідація кешу
+    keshPodorozhey.ochystytyKlyuch("trips");
+    setPodorozhi((star) => [
+      {
+        ...znachennya,
+        id: `new-${Date.now()}`,
+        zibrano: 0,
+        vytrachenoSuma: 0,
+      } as Podorozh,
+      ...star,
+    ]);
     return true;
   };
 
