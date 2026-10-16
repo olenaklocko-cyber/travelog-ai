@@ -1,5 +1,7 @@
 import type { Krayina, StatusPodorozhi } from "../types";
+import supabase from "../supabase";
 
+/** Локальний словник — резерв, якщо база недоступна */
 export const krajiny: Record<string, Krayina> = {
   IT: { prapor: "🇮🇹", nazva: "Італія", valiuta: "EUR" },
   FR: { prapor: "🇫🇷", nazva: "Франція", valiuta: "EUR" },
@@ -16,6 +18,31 @@ export const krajiny: Record<string, Krayina> = {
   AE: { prapor: "🇦🇪", nazva: "ОАЕ", valiuta: "AED" },
   TZ: { prapor: "🇹🇿", nazva: "Танзанія", valiuta: "TZS" },
   TH: { prapor: "🇹🇭", nazva: "Таїланд", valiuta: "THB" },
+};
+
+/**
+ * Завантажує країни з таблиці krajiny і дозаповнює локальний словник.
+ * Якщо база недоступна — працюємо з локальним словником.
+ */
+export const zavantazhytyKrajinyZBazy = async (): Promise<void> => {
+  try {
+    const { data } = await supabase
+      .from("krajiny")
+      .select("code, nazva, emoji");
+    if (data) {
+      for (const k of data) {
+        if (!krajiny[k.code]) {
+          krajiny[k.code] = {
+            prapor: k.emoji,
+            nazva: k.nazva,
+            valiuta: "", // валюта не в базі — за потреби додати
+          };
+        }
+      }
+    }
+  } catch {
+    // база недоступна — лишаємо локальний словник
+  }
 };
 
 export const krajinyVyboru: string[] = ["IT", "FR"];

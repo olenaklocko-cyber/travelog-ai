@@ -7,7 +7,7 @@ import Shapka from "../components/Shapka";
 import PanelPoshuku from "../components/PanelPoshuku";
 import SpysokPodorozhey from "../components/SpysokPodorozhey";
 import ModalkaNovaPodorozh from "../components/ModalkaNovaPodorozh";
-import { krajiny } from "../data/krajiny";
+import { krajiny, zavantazhytyKrajinyZBazy } from "../data/krajiny";
 import {
   zavantazhPodorozhiAPI,
   zberezhytyPodorozhAPI,
@@ -40,34 +40,17 @@ function Golovna({ korystuvach }: { korystuvach: Korystuvach }) {
 
   const zavantazhyty = useCallback(async () => {
     try {
-      const [{ data: trips }, { data: operaciyi }] = await Promise.all([
-        supabase
-          .from("trips")
-          .select("*")
-          .eq("user_id", korystuvach.id)
-          .order("id", { ascending: false }),
-        supabase
-          .from("expenses")
-          .select("trip_id, amount, type")
-          .eq("user_id", korystuvach.id),
-      ]);
-
-      const zibrano: Record<string, number> = {};
-      const vytracheno: Record<string, number> = {};
-      (operaciyi || []).forEach((o) => {
-        const suma = Number(o.amount) || 0;
-        if (o.type === "Дохід") {
-          zibrano[o.trip_id] = (zibrano[o.trip_id] || 0) + suma;
-        } else {
-          vytracheno[o.trip_id] = (vytracheno[o.trip_id] || 0) + suma;
-        }
-      });
+      // Використовуємо вигляд trips_z_vidatamy: zibrano/vytracheno рахує база
+      const { data: trips } = await supabase
+        .from("trips_z_vidatamy")
+        .select("*")
+        .order("id", { ascending: false });
 
       const realni = (trips || []).map((t) => ({
         ...t,
         status: statusDozvolenyy(String(t.status)) ? t.status : "Активні збори",
-        zibrano: zibrano[t.id] || 0,
-        vytrachenoSuma: vytracheno[t.id] || 0,
+        zibrano: Number(t.zibrano) || 0,
+        vytrachenoSuma: Number(t.vytracheno) || 0,
       }));
 
       // Кожен акаунт має свій список прихованих карток:
@@ -95,6 +78,7 @@ function Golovna({ korystuvach }: { korystuvach: Korystuvach }) {
 
   useEffect(() => {
     zavantazhyty();
+    void zavantazhytyKrajinyZBazy();
   }, [zavantazhyty]);
 
   const lychilnyky = useMemo(

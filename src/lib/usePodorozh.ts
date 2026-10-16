@@ -104,14 +104,14 @@ export function usePodorozh(
   });
 
   // Подорож, якої немає в mock-даних, лежить у Supabase.
+  // Використовуємо вигляд trips_z_vidatamy — zibrano/vytracheno рахує база.
   useEffect(() => {
     if (mock) return undefined;
     let zhyy = true;
     supabase
-      .from("trips")
+      .from("trips_z_vidatamy")
       .select("*")
       .eq("id", id)
-      .eq("user_id", korystuvach.id)
       .maybeSingle()
       .then(({ data }) => {
         if (!zhyy) return;
