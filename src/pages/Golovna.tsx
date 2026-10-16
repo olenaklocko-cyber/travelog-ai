@@ -4,6 +4,7 @@ import { Button, message } from "antd";
 import { BarChartOutlined, PlusOutlined } from "@ant-design/icons";
 import supabase from "../supabase";
 import { keshPodorozhey } from "../lib/kesh";
+import PanelFonovyhZadach from "../components/PanelFonovyhZadach";
 import Shapka from "../components/Shapka";
 import PanelPoshuku from "../components/PanelPoshuku";
 import SpysokPodorozhey from "../components/SpysokPodorozhey";
@@ -232,6 +233,11 @@ function Golovna({ korystuvach }: { korystuvach: Korystuvach }) {
           vydaty={vydatyPodorozh}
           vidkryty={(p) => nav(`/trip/${p.id}`)}
         />
+
+        {/* Тиждень 3: фонові задачі */}
+        <div style={{ marginTop: 24 }}>
+          <PanelFonovyhZadach />
+        </div>
       </div>
 
       <ModalkaNovaPodorozh
