@@ -5,6 +5,8 @@ import { BarChartOutlined, PlusOutlined } from "@ant-design/icons";
 import supabase from "../supabase";
 import { keshPodorozhey } from "../lib/kesh";
 import PanelFonovyhZadach from "../components/PanelFonovyhZadach";
+import LichylnykOnlain from "../components/LichylnykOnlain";
+import StromkaSpovishen from "../components/StromkaSpovishen";
 import Shapka from "../components/Shapka";
 import PanelPoshuku from "../components/PanelPoshuku";
 import SpysokPodorozhey from "../components/SpysokPodorozhey";
@@ -89,6 +91,25 @@ function Golovna({ korystuvach }: { korystuvach: Korystuvach }) {
   useEffect(() => {
     zavantazhyty();
     void zavantazhytyKrajinyZBazy();
+
+    // Тиждень 4: realtime-підписка на зміни trips
+    // Коли хтось додає/видаляє подорож — оновлюємо список миттєво
+    const pidpyska = supabase
+      .channel("trips-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "trips" },
+        () => {
+          // Скидаємо кеш і перезавантажуємо
+          keshPodorozhey.ochystytyKlyuch("trips");
+          void zavantazhyty();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(pidpyska);
+    };
   }, [zavantazhyty]);
 
   const lychilnyky = useMemo(
@@ -177,7 +198,15 @@ function Golovna({ korystuvach }: { korystuvach: Korystuvach }) {
       {contextHolder}
       <Shapka korystuvach={korystuvach} />
 
+      {/* Тиждень 4: онлайн-лічильник (реальний час) */}
+      <div style={{ display: "flex", justifyContent: "flex-end", padding: "8px 24px" }}>
+        <LichylnykOnlain korystuvach={korystuvach} />
+      </div>
+
       <div className="vmist">
+        {/* Тиждень 4: realtime-сповіщення */}
+        <StromkaSpovishen />
+
         <div className="zaholovok">
           <div className="zaholovok-titul">
             <h1>
