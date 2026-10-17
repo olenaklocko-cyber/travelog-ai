@@ -9,6 +9,7 @@ import LichylnykOnlain from "../components/LichylnykOnlain";
 import StromkaSpovishen from "../components/StromkaSpovishen";
 import PanelLogiv from "../components/PanelLogiv";
 import PanelStiykosti from "../components/PanelStiykosti";
+import PanelZdorovya from "../components/PanelZdorovya";
 import { log } from "../lib/logy";
 import { zZapaskovym } from "../lib/stiykist";
 import Shapka from "../components/Shapka";
@@ -314,6 +315,11 @@ function Golovna({ korystuvach }: { korystuvach: Korystuvach }) {
         {/* Тиждень 6: стійкість до збоїв */}
         <div style={{ marginTop: 24 }}>
           <PanelStiykosti />
+        </div>
+
+        {/* Тиждень 8: здоров'я сервісу */}
+        <div style={{ marginTop: 24 }}>
+          <PanelZdorovya />
         </div>
       </div>
 
