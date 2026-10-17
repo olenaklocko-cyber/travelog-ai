@@ -127,8 +127,11 @@ test("власник бачить графік: кнопка з головної
   await page.getByPlaceholder("Мінімум 6 символів").fill("e2e-parol-1");
   await page.getByRole("button", { name: "Увійти" }).click();
 
-  await page.getByRole("link", { name: /Графік відвідувань/ }).click();
-  await expect(page.getByRole("heading", { name: /Аналітика/ })).toBeVisible();
+  // Чекаємо поки лінк з'явиться після входу (CI повільніший за локальний)
+  const link = page.getByRole("link", { name: /Графік відвідувань/ });
+  await expect(link).toBeVisible({ timeout: 10000 });
+  await link.click();
+  await expect(page.getByRole("heading", { name: /Аналітика/ })).toBeVisible({ timeout: 10000 });
 
   // цифри підсумків (кожна у своїй картці)
   const pidsumok = (nazva: string) =>
