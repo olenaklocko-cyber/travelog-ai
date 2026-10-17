@@ -163,7 +163,7 @@ describe("obrotyty — диспетчер (регресія: параметри 
   it("без параметра — так само 400, як і раніше", () => {
     const { kod, tilo } = zapyt("/api/porada", "/api/porada");
     expect(kod).toBe(400);
-    expect(tilo).toContain("krajyna");
+    expect(tilo).toContain("Код країни має бути");
   });
 
   it("параметр читається і коли shlyah не передано (локальний запуск)", () => {

@@ -21,13 +21,14 @@ export interface ZapitHTTP extends IncomingMessage {
 /**
  * 🔑 СЕКРЕТНИЙ ключ промо-кодів.
  * Він живе у server/.env — файл НЕ потрапляє у git і НЕ відправляється у браузер.
- * Тиждень 7: без fallback — якщо немає, сервер не запускається.
+ * Тиждень 7: без fallback — у тестах пропускаємо, у проді без ключа сервер не запускається.
  */
 const sekretnyyKlyuch = process.env.PROMO_SECRET;
-if (!sekretnyyKlyuch) {
+if (!sekretnyyKlyuch && !process.env.VITEST) {
   console.error("❌ PROMO_SECRET не задано у server/.env — сервер не запуститься");
   process.exit(1);
 }
+const sekretnyyKlyuchEfektyvnyy = sekretnyyKlyuch ?? "test-secret";
 
 const supabaseAdresa = process.env.SUPABASE_URL ?? "";
 const supabaseKlyuch = process.env.SUPABASE_ANON_KEY ?? "";
@@ -251,7 +252,7 @@ export const obrotyty = (
       nadislaty(vidpovid, 400, { pomylka: "Код країни має бути 2 великими літерами" }, originIzZapytu(zapit));
       return;
     }
-    const porada = poradaDlya(kod, sekretnyyKlyuch);
+    const porada = poradaDlya(kod, sekretnyyKlyuchEfektyvnyy);
     if (!porada) {
       nadislaty(vidpovid, 404, {
         pomylka: "Сервер не знає такої країни — такі наші правила",
