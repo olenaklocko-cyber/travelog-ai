@@ -1,15 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, message } from "antd";
-import { BarChartOutlined, PlusOutlined } from "@ant-design/icons";
+import { BarChartOutlined, PlusOutlined, DashboardOutlined } from "@ant-design/icons";
 import supabase from "../supabase";
 import { keshPodorozhey } from "../lib/kesh";
-import PanelFonovyhZadach from "../components/PanelFonovyhZadach";
 import LichylnykOnlain from "../components/LichylnykOnlain";
 import StromkaSpovishen from "../components/StromkaSpovishen";
-import PanelLogiv from "../components/PanelLogiv";
-import PanelStiykosti from "../components/PanelStiykosti";
-import PanelZdorovya from "../components/PanelZdorovya";
 import { log } from "../lib/logy";
 import { zZapaskovym } from "../lib/stiykist";
 import Shapka from "../components/Shapka";
@@ -212,16 +208,6 @@ function Golovna({ korystuvach }: { korystuvach: Korystuvach }) {
     );
   };
 
-  // Тиждень 5+6: навмисна помилка для демонстрації логування.
-  // Throw у setTimeout → глобальний обловник ловить і пише в логи.
-  const zlamatyKod = () => {
-    log.info("demo", "Користувач натиснув «Зламати код»");
-    messageApi.info("Кидаю помилку... Подивись панель логів нижче 👇");
-    setTimeout(() => {
-      throw new Error("Навмисна помилка для демонстрації логування! 🐛");
-    }, 100);
-  };
-
   return (
     <div className="obolonka">
       {contextHolder}
@@ -264,6 +250,13 @@ function Golovna({ korystuvach }: { korystuvach: Korystuvach }) {
               Графік відвідувань
             </Button>
             <Button
+              size="large"
+              icon={<DashboardOutlined />}
+              href="#/monitoring"
+            >
+              Моніторинг
+            </Button>
+            <Button
               type="primary"
               size="large"
               icon={<PlusOutlined />}
@@ -291,36 +284,6 @@ function Golovna({ korystuvach }: { korystuvach: Korystuvach }) {
           vydaty={vydatyPodorozh}
           vidkryty={(p) => nav(`/trip/${p.id}`)}
         />
-
-        {/* Тиждень 3: фонові задачі */}
-        <div style={{ marginTop: 24 }}>
-          <PanelFonovyhZadach />
-        </div>
-
-        {/* Тиждень 5: логи та моніторинг */}
-        <div style={{ marginTop: 24 }}>
-          <div style={{ marginBottom: 8, textAlign: "right" }}>
-            <Button
-              danger
-              size="small"
-              onClick={zlamatyKod}
-              title="Навмисна помилка для демонстрації логування"
-            >
-              🐛 Зламати код
-            </Button>
-          </div>
-          <PanelLogiv />
-        </div>
-
-        {/* Тиждень 6: стійкість до збоїв */}
-        <div style={{ marginTop: 24 }}>
-          <PanelStiykosti />
-        </div>
-
-        {/* Тиждень 8: здоров'я сервісу */}
-        <div style={{ marginTop: 24 }}>
-          <PanelZdorovya />
-        </div>
       </div>
 
       <ModalkaNovaPodorozh

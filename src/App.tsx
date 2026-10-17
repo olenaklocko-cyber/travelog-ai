@@ -13,6 +13,7 @@ import Vhid from "./components/Vhid";
 import Golovna from "./pages/Golovna";
 import Podorozh from "./pages/Podorozh";
 import Analityka from "./pages/Analityka";
+import Monitoring from "./pages/Monitoring";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { zafiksovatyVizyt } from "./lib/analytika";
 import { uviklnutyPomylky, log } from "./lib/logy";
@@ -95,6 +96,10 @@ function App() {
                     vlasnyk={ciToVlasnyk(korystuvach)}
                   />
                 }
+              />
+              <Route
+                path="/monitoring"
+                element={<Monitoring korystuvach={korystuvach} />}
               />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
