@@ -13,7 +13,9 @@ import Vhid from "./components/Vhid";
 import Golovna from "./pages/Golovna";
 import Podorozh from "./pages/Podorozh";
 import Analityka from "./pages/Analityka";
+import ErrorBoundary from "./components/ErrorBoundary";
 import { zafiksovatyVizyt } from "./lib/analytika";
+import { uviklnutyPomylky, log } from "./lib/logy";
 import { ciToVlasnyk } from "./data/dostup";
 import type { Korystuvach } from "./types";
 
@@ -29,6 +31,12 @@ function StrizhVizytiv() {
 function App() {
   const [korystuvach, setKorystuvach] = useState<Korystuvach | null>(null);
   const [chekaye, setChekaye] = useState(true);
+
+  // Тиждень 5: глобальний обробник помилок
+  useEffect(() => {
+    uviklnutyPomylky();
+    log.info("app", "Застосунок запущено", { url: window.location.href });
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -63,33 +71,36 @@ function App() {
         },
       }}
     >
-      <HashRouter>
-        <StrizhVizytiv />
-        {!korystuvach ? (
-          <Vhid />
-        ) : (
-          <Routes>
-            <Route
-              path="/"
-              element={<Golovna korystuvach={korystuvach} />}
-            />
-            <Route
-              path="/trip/:id"
-              element={<Podorozh korystuvach={korystuvach} />}
-            />
-            <Route
-              path="/analityka"
-              element={
-                <Analityka
-                  korystuvach={korystuvach}
-                  vlasnyk={ciToVlasnyk(korystuvach)}
-                />
-              }
-            />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        )}
-      </HashRouter>
+      {/* Тиждень 5: ErrorBoundary ловить помилки React */}
+      <ErrorBoundary>
+        <HashRouter>
+          <StrizhVizytiv />
+          {!korystuvach ? (
+            <Vhid />
+          ) : (
+            <Routes>
+              <Route
+                path="/"
+                element={<Golovna korystuvach={korystuvach} />}
+              />
+              <Route
+                path="/trip/:id"
+                element={<Podorozh korystuvach={korystuvach} />}
+              />
+              <Route
+                path="/analityka"
+                element={
+                  <Analityka
+                    korystuvach={korystuvach}
+                    vlasnyk={ciToVlasnyk(korystuvach)}
+                  />
+                }
+              />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          )}
+        </HashRouter>
+      </ErrorBoundary>
     </ConfigProvider>
   );
 }

@@ -7,6 +7,8 @@ import { keshPodorozhey } from "../lib/kesh";
 import PanelFonovyhZadach from "../components/PanelFonovyhZadach";
 import LichylnykOnlain from "../components/LichylnykOnlain";
 import StromkaSpovishen from "../components/StromkaSpovishen";
+import PanelLogiv from "../components/PanelLogiv";
+import { log } from "../lib/logy";
 import Shapka from "../components/Shapka";
 import PanelPoshuku from "../components/PanelPoshuku";
 import SpysokPodorozhey from "../components/SpysokPodorozhey";
@@ -193,6 +195,13 @@ function Golovna({ korystuvach }: { korystuvach: Korystuvach }) {
     );
   };
 
+  // Тиждень 5: навмисна помилка для демонстрації логування
+  const zlamatyKod = () => {
+    log.info("demo", "Користувач натиснув «Зламати код»");
+    // Це навмисна помилка — для демонстрації
+    throw new Error("Навмисна помилка для демонстрації логування! 🐛");
+  };
+
   return (
     <div className="obolonka">
       {contextHolder}
@@ -242,6 +251,15 @@ function Golovna({ korystuvach }: { korystuvach: Korystuvach }) {
             >
               Додати подорож
             </Button>
+            {/* Тиждень 5: демонстрація логування помилок */}
+            <Button
+              size="large"
+              danger
+              onClick={zlamatyKod}
+              title="Навмисна помилка для демонстрації логування"
+            >
+              🐛 Зламати код
+            </Button>
           </div>
         </div>
 
@@ -266,6 +284,11 @@ function Golovna({ korystuvach }: { korystuvach: Korystuvach }) {
         {/* Тиждень 3: фонові задачі */}
         <div style={{ marginTop: 24 }}>
           <PanelFonovyhZadach />
+        </div>
+
+        {/* Тиждень 5: логи та моніторинг */}
+        <div style={{ marginTop: 24 }}>
+          <PanelLogiv />
         </div>
       </div>
 
