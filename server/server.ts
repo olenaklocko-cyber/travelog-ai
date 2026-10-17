@@ -21,28 +21,51 @@ export interface ZapitHTTP extends IncomingMessage {
 /**
  * 🔑 СЕКРЕТНИЙ ключ промо-кодів.
  * Він живе у server/.env — файл НЕ потрапляє у git і НЕ відправляється у браузер.
- * (У застосунку ключі з префіксом VITE_ — навпаки, ВИДНІ всім.)
+ * Тиждень 7: без fallback — якщо немає, сервер не запускається.
  */
-const sekretnyyKlyuch = process.env.PROMO_SECRET ?? "demo-secret";
+const sekretnyyKlyuch = process.env.PROMO_SECRET;
+if (!sekretnyyKlyuch) {
+  console.error("❌ PROMO_SECRET не задано у server/.env — сервер не запуститься");
+  process.exit(1);
+}
 
 const supabaseAdresa = process.env.SUPABASE_URL ?? "";
 const supabaseKlyuch = process.env.SUPABASE_ANON_KEY ?? "";
 
+// Тиждень 7: безпека — лише дозволені домени
+const DOZvoleniOrigin = new Set([
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://travelog-ai.vercel.app",
+  "https://olenaklocko-cyber.github.io",
+]);
+
 const CORS = {
-  "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Max-Age": "86400",
 };
+
+const originIzZapytu = (zapit: IncomingMessage): string =>
+  zapit.headers.origin ?? "";
 
 const nadislaty = (
   vidpovid: ServerResponse,
   kod: number,
-  dany: unknown
+  dany: unknown,
+  origin?: string
 ): void => {
-  vidpovid.writeHead(kod, {
+  const zagolovky: Record<string, string> = {
     "Content-Type": "application/json; charset=utf-8",
+    "X-Content-Type-Options": "nosniff",
+    "Cache-Control": "no-store",
     ...CORS,
-  });
+  };
+  if (origin && DOZvoleniOrigin.has(origin)) {
+    zagolovky["Access-Control-Allow-Origin"] = origin;
+    zagolovky["Vary"] = "Origin";
+  }
+  vidpovid.writeHead(kod, zagolovky);
   vidpovid.end(JSON.stringify(dany));
 };
 
@@ -194,7 +217,18 @@ export const obrotyty = (
     .pathname;
 
   if (zapit.method === "OPTIONS") {
-    vidpovid.writeHead(204, CORS);
+    const origin = originIzZapytu(zapit);
+    if (origin && !DOZvoleniOrigin.has(origin)) {
+      vidpovid.writeHead(403, { "Content-Type": "application/json" });
+      vidpovid.end(JSON.stringify({ pomylka: "Origin не дозволений" }));
+      return;
+    }
+    const zagolovky: Record<string, string> = { ...CORS };
+    if (origin) {
+      zagolovky["Access-Control-Allow-Origin"] = origin;
+      zagolovky["Vary"] = "Origin";
+    }
+    vidpovid.writeHead(204, zagolovky);
     vidpovid.end();
     return;
   }
@@ -212,14 +246,15 @@ export const obrotyty = (
   // Ендпоінт 2: порада для країни — за ПРАВИЛАМИ СЕРВЕРА
   if (zapit.method === "GET" && shlyahZapytu === "/api/porada") {
     const kod = url.searchParams.get("krajyna") ?? "";
-    if (!kod) {
-      nadislaty(vidpovid, 400, { pomylka: "Додайте параметр: ?krajyna=XX" });
+    // Тиждень 7: валідація коду країни (лише 2 великі літери)
+    if (!/^[A-Z]{2}$/.test(kod)) {
+      nadislaty(vidpovid, 400, { pomylka: "Код країни має бути 2 великими літерами" }, originIzZapytu(zapit));
       return;
     }
     const porada = poradaDlya(kod, sekretnyyKlyuch);
     if (!porada) {
       nadislaty(vidpovid, 404, {
-        pomylka: `Сервер не знає країну «${kod}» — такі наші правила`,
+        pomylka: "Сервер не знає такої країни — такі наші правила",
       });
       return;
     }

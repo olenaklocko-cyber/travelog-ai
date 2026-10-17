@@ -11,8 +11,8 @@ export const uidKorystuvacha = (
 
 /**
  * Чи це власник застосунку (я)?
- * Порівнюємо id, якщо заданий VITE_VLASYNYK_ID, інакше — email.
- * Якщо нічого не налаштовано — всі рівні (захист вимкнено, поведінка як раніше).
+ * Порівнюємо id (UUID), якщо заданий VITE_VLASYNYK_ID.
+ * Тиждень 7: fail closed — якщо нічого не налаштовано, НІХТО не власник.
  */
 export const ciToVlasnyk = (
   korystuvach: Korystuvach | null | undefined
@@ -23,7 +23,7 @@ export const ciToVlasnyk = (
   if (emailVlasnyka) {
     return String(korystuvach?.email || "").toLowerCase() === emailVlasnyka;
   }
-  return true;
+  return false; // fail closed
 };
 
 /** Читає JSON із localStorage. Повертає `unknown`, бо звідти може прийти що завгодно. */
