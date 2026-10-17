@@ -8,7 +8,9 @@ import PanelFonovyhZadach from "../components/PanelFonovyhZadach";
 import LichylnykOnlain from "../components/LichylnykOnlain";
 import StromkaSpovishen from "../components/StromkaSpovishen";
 import PanelLogiv from "../components/PanelLogiv";
+import PanelStiykosti from "../components/PanelStiykosti";
 import { log } from "../lib/logy";
+import { zZapaskovym } from "../lib/stiykist";
 import Shapka from "../components/Shapka";
 import PanelPoshuku from "../components/PanelPoshuku";
 import SpysokPodorozhey from "../components/SpysokPodorozhey";
@@ -46,15 +48,29 @@ function Golovna({ korystuvach }: { korystuvach: Korystuvach }) {
 
   const zavantazhyty = useCallback(async () => {
     try {
-      // Тиждень 2: кеш 2 хв — 2-й захід на сторінку без запиту до бази
-      const trips = (await keshPodorozhey.aboObchyslyty("trips", async () => {
-        const { data } = await supabase
-          .from("trips_z_vidatamy")
-          .select("*")
-          .order("id", { ascending: false })
-          .limit(50);
-        return data ?? [];
-      })) as Record<string, unknown>[];
+      // Тиждень 6: стійкість — timeout + retry + graceful degradation
+      const rezultat = await zZapaskovym(
+        // Основний шлях: кеш або запит до бази
+        async () => {
+          const trips = (await keshPodorozhey.aboObchyslyty("trips", async () => {
+            const { data } = await supabase
+              .from("trips_z_vidatamy")
+              .select("*")
+              .order("id", { ascending: false })
+              .limit(50);
+            return data ?? [];
+          })) as Record<string, unknown>[];
+          return trips;
+        },
+        // Запасний: localStorage або порожній список
+        () => {
+          log.warning("golovna", "Основний шлях впав, використовую запасний");
+          return [] as Record<string, unknown>[];
+        },
+        { timeoutMs: 5000, retry: 2 }
+      );
+
+      const trips = rezultat.danі ?? [];
 
       const realni = trips.map((t) => ({
         ...t,
@@ -289,6 +305,11 @@ function Golovna({ korystuvach }: { korystuvach: Korystuvach }) {
         {/* Тиждень 5: логи та моніторинг */}
         <div style={{ marginTop: 24 }}>
           <PanelLogiv />
+        </div>
+
+        {/* Тиждень 6: стійкість до збоїв */}
+        <div style={{ marginTop: 24 }}>
+          <PanelStiykosti />
         </div>
       </div>
 
