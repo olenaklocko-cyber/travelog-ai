@@ -270,15 +270,6 @@ function Golovna({ korystuvach }: { korystuvach: Korystuvach }) {
             >
               Додати подорож
             </Button>
-            {/* Тиждень 5: демонстрація логування помилок */}
-            <Button
-              size="large"
-              danger
-              onClick={zlamatyKod}
-              title="Навмисна помилка для демонстрації логування"
-            >
-              🐛 Зламати код
-            </Button>
           </div>
         </div>
 
@@ -307,6 +298,16 @@ function Golovna({ korystuvach }: { korystuvach: Korystuvach }) {
 
         {/* Тиждень 5: логи та моніторинг */}
         <div style={{ marginTop: 24 }}>
+          <div style={{ marginBottom: 8, textAlign: "right" }}>
+            <Button
+              danger
+              size="small"
+              onClick={zlamatyKod}
+              title="Навмисна помилка для демонстрації логування"
+            >
+              🐛 Зламати код
+            </Button>
+          </div>
           <PanelLogiv />
         </div>
 
